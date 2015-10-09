@@ -62,6 +62,11 @@ public interface ProxyConfig
     int getThrottle();
 
     /**
+     * The tab complete throttle delay.
+     */
+    int getTabCompleteThrottle();
+
+    /**
      * Whether the proxy will parse IPs with spigot or not
      */
     @Deprecated

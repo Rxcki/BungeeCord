@@ -57,6 +57,7 @@ public class Configuration implements ProxyConfig
     private boolean ipForward;
     private Favicon favicon;
     private int compressionThreshold = 256;
+    private int tabCompleteThrottle = -1;
 
     public void load()
     {
@@ -82,6 +83,7 @@ public class Configuration implements ProxyConfig
         logCommands = adapter.getBoolean( "log_commands", logCommands );
         playerLimit = adapter.getInt( "player_limit", playerLimit );
         throttle = adapter.getInt( "connection_throttle", throttle );
+        tabCompleteThrottle = adapter.getInt( "tab_complete_throttle", tabCompleteThrottle );
         ipForward = adapter.getBoolean( "ip_forward", ipForward );
         compressionThreshold = adapter.getInt( "network_compression_threshold", compressionThreshold );
 
