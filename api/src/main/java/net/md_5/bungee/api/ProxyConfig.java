@@ -46,6 +46,11 @@ public interface ProxyConfig
     boolean isLogCommands();
 
     /**
+     * Whether we log server list pings
+     */
+    boolean isLogServerListPing();
+
+    /**
      * Returns the player max.
      */
     int getPlayerLimit();
