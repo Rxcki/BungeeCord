@@ -28,7 +28,7 @@ public class ModuleManager
 
     public ModuleManager()
     {
-        knownSources.put( "jenkins", new JenkinsModuleSource() );
+        knownSources.put( "jenkins", new ConfigurableModuleSource() );
     }
 
     @SuppressFBWarnings(

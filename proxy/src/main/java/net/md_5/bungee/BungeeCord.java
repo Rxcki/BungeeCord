@@ -253,6 +253,7 @@ public class BungeeCord extends ProxyServer
         eventLoops = PipelineUtils.newEventLoopGroup( 0, new ThreadFactoryBuilder().setNameFormat( "Netty IO Thread #%1$d" ).build() );
 
         File moduleDirectory = new File( "modules" );
+        config.load();
         moduleManager.load( this, moduleDirectory );
         pluginManager.detectPlugins( moduleDirectory );
 
@@ -260,7 +261,6 @@ public class BungeeCord extends ProxyServer
         pluginManager.detectPlugins( pluginsFolder );
 
         pluginManager.loadPlugins();
-        config.load();
 
         registerChannel( ForgeConstants.FML_TAG );
         registerChannel( ForgeConstants.FML_HANDSHAKE_TAG );
