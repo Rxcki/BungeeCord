@@ -5,6 +5,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
+import java.io.FilenameFilter;
 import java.io.InputStream;
 import java.net.URI;
 import java.util.ArrayList;
@@ -35,9 +36,26 @@ public class ModuleManager
             {
                 "SF_SWITCH_FALLTHROUGH", "SF_SWITCH_NO_DEFAULT"
             })
-    public void load(ProxyServer proxy, File moduleDirectory) throws Exception
+    public void load(ProxyServer proxy, final File moduleDirectory) throws Exception
     {
         moduleDirectory.mkdir();
+
+        if ( !proxy.getConfigurationAdapter().getBoolean( "module_download", false ) )
+        {
+            System.out.println( "Module download is disabled. Skipping." );
+            if ( !Boolean.parseBoolean( System.getProperty( "me.minotopia.flexpipe.ignoreNoModues", "false" ) ) && moduleDirectory.list( new FilenameFilter()
+            {
+                @Override
+                public boolean accept(File dir, String name)
+                {
+                    return dir.equals( moduleDirectory ) && name.toLowerCase().endsWith( ".jar" );
+                }
+            } ).length == 0 )
+            {
+                proxy.getLogger().warning( "As you have no modules, download some manually or enable automatic download in config.yml" );
+            }
+            return;
+        }
 
         ModuleVersion bungeeVersion = ModuleVersion.parse( proxy.getVersion() );
         if ( bungeeVersion == null )
