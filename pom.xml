@@ -3,24 +3,18 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <parent>
-        <groupId>org.sonatype.oss</groupId>
-        <artifactId>oss-parent</artifactId>
-        <version>9</version>
-    </parent>
-
-    <groupId>net.md-5</groupId>
-    <artifactId>bungeecord-parent</artifactId>
+    <groupId>me.minotopia.flexpipe</groupId>
+    <artifactId>flexpipe-parent</artifactId>
     <version>1.9-SNAPSHOT</version>
     <packaging>pom</packaging>
 
-    <name>BungeeCord-Parent</name>
-    <description>Parent project for all BungeeCord modules.</description>
-    <url>https://github.com/SpigotMC/BungeeCord</url>
+    <name>FlexPipe-Parent</name>
+    <description>Parent project for all FlexPipe modules.</description>
+    <url>https://github.com/minotopiame/FlexPipe</url>
     <inceptionYear>2012</inceptionYear>
     <organization>
-        <name>SpigotMC</name>
-        <url>https://github.com/SpigotMC</url>
+        <name>MinoTopia.me</name>
+        <url>https://github.com/minotopiame</url>
     </organization>
     <licenses>
         <license>
@@ -50,18 +44,30 @@
     </modules>
 
     <scm>
-        <connection>scm:git:git@github.com:SpigotMC/BungeeCord.git</connection>
-        <developerConnection>scm:git:git@github.com:SpigotMC/BungeeCord.git</developerConnection>
-        <url>git@github.com:SpigotMC/BungeeCord.git</url>
+        <connection>scm:git:git@github.com:minotopiame/FlexPipe.git</connection>
+        <developerConnection>scm:git:git@github.com:minotopiame/FlexPipe.git</developerConnection>
+        <url>git@github.com:minotopiame/FlexPipe.git</url>
     </scm>
     <issueManagement>
         <system>GitHub</system>
-        <url>https://github.com/SpigotMC/BungeeCord/issues</url>
+        <url>https://github.com/minotopiame/FlexPipe/issues</url>
     </issueManagement>
     <ciManagement>
         <system>jenkins</system>
-        <url>http://ci.md-5.net/job/BungeeCord</url>
+        <url>http://ci.janmm14.de/job/public~server~FlexPipe/</url>
     </ciManagement>
+
+    <distributionManagement>
+        <downloadUrl>http://ci.janmm14.de/job/public~server~FlexPipe/</downloadUrl>
+        <repository>
+            <id>janmm14-repo</id>
+            <url>https://ci.janmm14.de/plugin/repository/everything/</url>
+        </repository>
+        <snapshotRepository>
+            <id>janmm14-repo</id>
+            <url>https://ci.janmm14.de/plugin/repository/everything/</url>
+        </snapshotRepository>
+    </distributionManagement>
 
     <properties>
         <build.number>unknown</build.number>
@@ -141,10 +147,10 @@
                     </signature>
                 </configuration>
             </plugin>
-            <!-- OSS Parent 9 uses 2.7, 2.10+ is broken anyway -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
+                <!-- 2.10+ claimed to be broken says FlexPipe -->
                 <version>2.7</version>
             </plugin>
         </plugins>

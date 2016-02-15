@@ -4,19 +4,17 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>net.md-5</groupId>
-        <artifactId>bungeecord-parent</artifactId>
+        <groupId>me.minotopia.flexpipe</groupId>
+        <artifactId>flexpipe-parent</artifactId>
         <version>1.9-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <groupId>net.md-5</groupId>
-    <artifactId>bungeecord-bootstrap</artifactId>
-    <version>1.9-SNAPSHOT</version>
+    <artifactId>flexpipe-bootstrap</artifactId>
     <packaging>jar</packaging>
 
-    <name>BungeeCord-Bootstrap</name>
-    <description>Java 1.6 loader for BungeeCord</description>
+    <name>FlexPipe-Bootstrap</name>
+    <description>Java 1.6 loader for FlexPipe</description>
 
     <properties>
         <maven.compiler.source>1.6</maven.compiler.source>
@@ -26,8 +24,8 @@
 
     <dependencies>
         <dependency>
-            <groupId>net.md-5</groupId>
-            <artifactId>bungeecord-proxy</artifactId>
+            <groupId>me.minotopia.flexpipe</groupId>
+            <artifactId>flexpipe-proxy</artifactId>
             <version>${project.version}</version>
             <scope>compile</scope>
         </dependency>
@@ -40,7 +38,7 @@
     </dependencies>
 
     <build>
-        <finalName>BungeeCord</finalName>
+        <finalName>FlexPipe</finalName>
         <plugins>
             <plugin>
                 <!-- Don't deploy proxy to maven repo, only APIs -->
@@ -57,7 +55,7 @@
                 <configuration>
                     <archive>
                         <manifestEntries>
-                            <Main-Class>net.md_5.bungee.Bootstrap</Main-Class> 
+                            <Main-Class>net.md_5.bungee.Bootstrap</Main-Class>
                             <Implementation-Version>${describe}</Implementation-Version>
                             <Specification-Version>${maven.build.timestamp}</Specification-Version>
                         </manifestEntries>

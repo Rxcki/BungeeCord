@@ -4,19 +4,17 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>net.md-5</groupId>
-        <artifactId>bungeecord-parent</artifactId>
+        <groupId>me.minotopia.flexpipe</groupId>
+        <artifactId>flexpipe-parent</artifactId>
         <version>1.9-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <groupId>net.md-5</groupId>
-    <artifactId>bungeecord-native</artifactId>
-    <version>1.9-SNAPSHOT</version>
+    <artifactId>flexpipe-native</artifactId>
     <packaging>jar</packaging>
 
-    <name>BungeeCord-Native</name>
-    <description>Optional native code to speed up and enhance BungeeCord functionality.</description>
+    <name>FlexPipe-Native</name>
+    <description>Optional native code to speed up and enhance FlexPipe functionality.</description>
 
     <dependencies>
         <dependency>

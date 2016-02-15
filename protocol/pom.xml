@@ -4,24 +4,22 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>net.md-5</groupId>
-        <artifactId>bungeecord-parent</artifactId>
+        <groupId>me.minotopia.flexpipe</groupId>
+        <artifactId>flexpipe-parent</artifactId>
         <version>1.9-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <groupId>net.md-5</groupId>
-    <artifactId>bungeecord-protocol</artifactId>
-    <version>1.9-SNAPSHOT</version>
+    <artifactId>flexpipe-protocol</artifactId>
     <packaging>jar</packaging>
 
-    <name>BungeeCord-Protocol</name>
-    <description>Minimal implementation of the Minecraft protocol for use in BungeeCord</description>
+    <name>FlexPipe-Protocol</name>
+    <description>Minimal implementation of the Minecraft protocol for use in FlexPipe</description>
 
     <dependencies>
         <dependency>
-            <groupId>net.md-5</groupId>
-            <artifactId>bungeecord-chat</artifactId>
+            <groupId>me.minotopia.flexpipe</groupId>
+            <artifactId>flexpipe-chat</artifactId>
             <version>${project.version}</version>
             <scope>compile</scope>
         </dependency>

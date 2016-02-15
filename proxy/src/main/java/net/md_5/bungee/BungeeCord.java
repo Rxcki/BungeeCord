@@ -176,7 +176,7 @@ public class BungeeCord extends ProxyServer
     public BungeeCord() throws IOException
     {
         // Java uses ! to indicate a resource inside of a jar/zip/other container. Running Bungee from within a directory that has a ! will cause this to muck up.
-        Preconditions.checkState( new File( "." ).getAbsolutePath().indexOf( '!' ) == -1, "Cannot use BungeeCord in directory with ! in path." );
+        Preconditions.checkState( new File( "." ).getAbsolutePath().indexOf( '!' ) == -1, "Cannot use FlexPipe in directory with ! in path." );
 
         System.setSecurityManager( new BungeeSecurityManager() );
 
@@ -203,8 +203,8 @@ public class BungeeCord extends ProxyServer
         // Furthermore this behaviour only occurs in specific combinations due to the parsing done by jansi.
         // For example test-test works fine, but test-test-test does not! In order to avoid this all together but
         // still keep our versions the same as they were, we set the override property to the essentially garbage version
-        // BungeeCord. This version is only used when extracting the libraries to their temp folder.
-        System.setProperty( "library.jansi.version", "BungeeCord" );
+        // FlexPipe. This version is only used when extracting the libraries to their temp folder.
+        System.setProperty( "library.jansi.version", "FlexPipe" );
 
         AnsiConsole.systemInstall();
         consoleReader = new ConsoleReader();
@@ -458,7 +458,7 @@ public class BungeeCord extends ProxyServer
     @Override
     public String getName()
     {
-        return "BungeeCord";
+        return "FlexPipe";
     }
 
     @Override

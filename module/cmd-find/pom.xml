@@ -4,15 +4,13 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>net.md-5</groupId>
-        <artifactId>bungeecord-module</artifactId>
+        <groupId>me.minotopia.flexpipe</groupId>
+        <artifactId>flexpipe-module</artifactId>
         <version>1.9-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <groupId>net.md-5</groupId>
-    <artifactId>bungeecord-module-cmd-find</artifactId>
-    <version>1.9-SNAPSHOT</version>
+    <artifactId>flexpipe-module-cmd-find</artifactId>
     <packaging>jar</packaging>
 
     <name>cmd_find</name>

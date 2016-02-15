@@ -4,18 +4,16 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>net.md-5</groupId>
-        <artifactId>bungeecord-parent</artifactId>
+        <groupId>me.minotopia.flexpipe</groupId>
+        <artifactId>flexpipe-parent</artifactId>
         <version>1.9-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <groupId>net.md-5</groupId>
-    <artifactId>bungeecord-proxy</artifactId>
-    <version>1.9-SNAPSHOT</version>
+    <artifactId>flexpipe-proxy</artifactId>
     <packaging>jar</packaging>
 
-    <name>BungeeCord-Proxy</name>
+    <name>FlexPipe-Proxy</name>
     <description>Proxy component of the Elastic Portal Suite</description>
 
     <dependencies>
@@ -39,26 +37,26 @@
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>net.md-5</groupId>
-            <artifactId>bungeecord-api</artifactId>
+            <groupId>me.minotopia.flexpipe</groupId>
+            <artifactId>flexpipe-api</artifactId>
             <version>${project.version}</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>net.md-5</groupId>
-            <artifactId>bungeecord-native</artifactId>
+            <groupId>me.minotopia.flexpipe</groupId>
+            <artifactId>flexpipe-native</artifactId>
             <version>${project.version}</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>net.md-5</groupId>
-            <artifactId>bungeecord-protocol</artifactId>
+            <groupId>me.minotopia.flexpipe</groupId>
+            <artifactId>flexpipe-protocol</artifactId>
             <version>${project.version}</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>net.md-5</groupId>
-            <artifactId>bungeecord-query</artifactId>
+            <groupId>me.minotopia.flexpipe</groupId>
+            <artifactId>flexpipe-query</artifactId>
             <version>${project.version}</version>
             <scope>compile</scope>
         </dependency>

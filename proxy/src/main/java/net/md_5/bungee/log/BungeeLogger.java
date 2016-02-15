@@ -22,7 +22,7 @@ public class BungeeLogger extends Logger
     @SuppressFBWarnings("SC_START_IN_CTOR")
     public BungeeLogger(BungeeCord bungee)
     {
-        super( "BungeeCord", null );
+        super( "FlexPipe", null );
         setLevel( Level.ALL );
 
         try

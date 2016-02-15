@@ -4,42 +4,40 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>net.md-5</groupId>
-        <artifactId>bungeecord-parent</artifactId>
+        <groupId>me.minotopia.flexpipe</groupId>
+        <artifactId>flexpipe-parent</artifactId>
         <version>1.9-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <groupId>net.md-5</groupId>
-    <artifactId>bungeecord-api</artifactId>
-    <version>1.9-SNAPSHOT</version>
+    <artifactId>flexpipe-api</artifactId>
     <packaging>jar</packaging>
 
-    <name>BungeeCord-API</name>
+    <name>FlexPipe-API</name>
     <description>API implemented by the Elastic Portal Suite</description>
 
     <dependencies>
         <dependency>
-            <groupId>net.md-5</groupId>
-            <artifactId>bungeecord-chat</artifactId>
+            <groupId>me.minotopia.flexpipe</groupId>
+            <artifactId>flexpipe-chat</artifactId>
             <version>${project.version}</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>net.md-5</groupId>
-            <artifactId>bungeecord-config</artifactId>
+            <groupId>me.minotopia.flexpipe</groupId>
+            <artifactId>flexpipe-config</artifactId>
             <version>${project.version}</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>net.md-5</groupId>
-            <artifactId>bungeecord-event</artifactId>
+            <groupId>me.minotopia.flexpipe</groupId>
+            <artifactId>flexpipe-event</artifactId>
             <version>${project.version}</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>net.md-5</groupId>
-            <artifactId>bungeecord-protocol</artifactId>
+            <groupId>me.minotopia.flexpipe</groupId>
+            <artifactId>flexpipe-protocol</artifactId>
             <version>${project.version}</version>
             <scope>compile</scope>
         </dependency>

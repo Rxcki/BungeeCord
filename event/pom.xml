@@ -4,17 +4,15 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>net.md-5</groupId>
-        <artifactId>bungeecord-parent</artifactId>
+        <groupId>me.minotopia.flexpipe</groupId>
+        <artifactId>flexpipe-parent</artifactId>
         <version>1.9-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <groupId>net.md-5</groupId>
-    <artifactId>bungeecord-event</artifactId>
-    <version>1.9-SNAPSHOT</version>
+    <artifactId>flexpipe-event</artifactId>
     <packaging>jar</packaging>
 
-    <name>BungeeCord-Event</name>
-    <description>Generic java event dispatching API intended for use with BungeeCord</description>
+    <name>FlexPipe-Event</name>
+    <description>Generic java event dispatching API intended for use with FlexPipe</description>
 </project>

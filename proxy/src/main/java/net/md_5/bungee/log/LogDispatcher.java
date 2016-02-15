@@ -12,7 +12,7 @@ public class LogDispatcher extends Thread
 
     public LogDispatcher(BungeeLogger logger)
     {
-        super( "BungeeCord Logger Thread" );
+        super( "FlexPipe Logger Thread" );
         this.logger = logger;
     }
 
