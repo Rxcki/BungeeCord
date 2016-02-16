@@ -60,7 +60,7 @@ public class Metrics extends TimerTask
         final StringBuilder data = new StringBuilder();
         data.append( encode( "guid" ) ).append( '=' ).append( encode( BungeeCord.getInstance().config.getUuid() ) );
         encodeDataPair( data, "version", ProxyServer.getInstance().getVersion() );
-        encodeDataPair( data, "server", "0" );
+        encodeDataPair( data, "server", ProxyServer.getInstance().getName() );
         encodeDataPair( data, "players", Integer.toString( ProxyServer.getInstance().getOnlineCount() ) );
         encodeDataPair( data, "revision", String.valueOf( REVISION ) );
 
