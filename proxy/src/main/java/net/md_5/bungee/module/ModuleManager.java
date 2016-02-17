@@ -43,14 +43,7 @@ public class ModuleManager
         if ( !proxy.getConfigurationAdapter().getBoolean( "module_download", false ) )
         {
             System.out.println( "Module download is disabled. Skipping." );
-            if ( !Boolean.parseBoolean( System.getProperty( "me.minotopia.flexpipe.ignoreNoModues", "false" ) ) && moduleDirectory.list( new FilenameFilter()
-            {
-                @Override
-                public boolean accept(File dir, String name)
-                {
-                    return dir.equals( moduleDirectory ) && name.toLowerCase().endsWith( ".jar" );
-                }
-            } ).length == 0 )
+            if ( !Boolean.parseBoolean( System.getProperty( "me.minotopia.flexpipe.ignoreNoModues", "false" ) ) && moduleDirectory.list( (dir, name) -> dir.equals( moduleDirectory ) && name.toLowerCase().endsWith( ".jar" ) ).length == 0 )
             {
                 proxy.getLogger().warning( "As you have no modules, download some manually or enable automatic download in config.yml" );
             }

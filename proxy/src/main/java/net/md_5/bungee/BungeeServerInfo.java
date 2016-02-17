@@ -126,18 +126,13 @@ public class BungeeServerInfo implements ServerInfo
     {
         Preconditions.checkNotNull( callback, "callback" );
 
-        ChannelFutureListener listener = new ChannelFutureListener()
-        {
-            @Override
-            public void operationComplete(ChannelFuture future) throws Exception
+        ChannelFutureListener listener = future -> {
+            if ( future.isSuccess() )
             {
-                if ( future.isSuccess() )
-                {
-                    future.channel().pipeline().get( HandlerBoss.class ).setHandler( new PingHandler( BungeeServerInfo.this, callback, protocolVersion ) );
-                } else
-                {
-                    callback.done( null, future.cause() );
-                }
+                future.channel().pipeline().get( HandlerBoss.class ).setHandler( new PingHandler( BungeeServerInfo.this, callback, protocolVersion ) );
+            } else
+            {
+                callback.done( null, future.cause() );
             }
         };
         new Bootstrap()

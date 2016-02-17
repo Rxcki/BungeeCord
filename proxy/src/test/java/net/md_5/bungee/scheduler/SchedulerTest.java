@@ -19,15 +19,7 @@ public class SchedulerTest
 
         final CountDownLatch latch = new CountDownLatch( 1 );
 
-        scheduler.runAsync( DummyPlugin.INSTANCE, new Runnable()
-        {
-
-            @Override
-            public void run()
-            {
-                latch.countDown();
-            }
-        } );
+        scheduler.runAsync( DummyPlugin.INSTANCE, () -> latch.countDown() );
 
         latch.await( 5, TimeUnit.SECONDS );
 
@@ -73,14 +65,6 @@ public class SchedulerTest
 
     private ScheduledTask setup(TaskScheduler scheduler, final AtomicBoolean hasRun)
     {
-        return scheduler.schedule( DummyPlugin.INSTANCE, new Runnable()
-        {
-
-            @Override
-            public void run()
-            {
-                hasRun.set( true );
-            }
-        }, 100, 100, TimeUnit.MILLISECONDS );
+        return scheduler.schedule( DummyPlugin.INSTANCE, () -> hasRun.set( true ), 100, 100, TimeUnit.MILLISECONDS );
     }
 }

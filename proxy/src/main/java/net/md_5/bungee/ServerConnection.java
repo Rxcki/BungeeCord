@@ -54,14 +54,7 @@ public class ServerConnection implements Server
 
         if ( !ch.isClosed() )
         {
-            ch.getHandle().eventLoop().schedule( new Runnable()
-            {
-                @Override
-                public void run()
-                {
-                    ch.getHandle().close();
-                }
-            }, 100, TimeUnit.MILLISECONDS );
+            ch.getHandle().eventLoop().schedule( ( Runnable ) () -> ch.getHandle().close(), 100, TimeUnit.MILLISECONDS );
         }
     }
 

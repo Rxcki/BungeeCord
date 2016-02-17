@@ -14,6 +14,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Properties;
 import java.util.PropertyResourceBundle;
+import java.util.stream.Collectors;
 import net.md_5.bungee.api.Favicon;
 import net.md_5.bungee.api.ServerPing;
 import net.md_5.bungee.api.Title;
@@ -338,19 +339,14 @@ public class BungeeCord extends ProxyServer
     {
         for ( final ListenerInfo info : config.getListeners() )
         {
-            ChannelFutureListener listener = new ChannelFutureListener()
-            {
-                @Override
-                public void operationComplete(ChannelFuture future) throws Exception
+            ChannelFutureListener listener = future -> {
+                if ( future.isSuccess() )
                 {
-                    if ( future.isSuccess() )
-                    {
-                        listeners.add( future.channel() );
-                        getLogger().log( Level.INFO, "Listening on {0}", info.getHost() );
-                    } else
-                    {
-                        getLogger().log( Level.WARNING, "Could not bind to host " + info.getHost(), future.cause() );
-                    }
+                    listeners.add( future.channel() );
+                    getLogger().log( Level.INFO, "Listening on {0}", info.getHost() );
+                } else
+                {
+                    getLogger().log( Level.WARNING, "Could not bind to host " + info.getHost(), future.cause() );
                 }
             };
             new ServerBootstrap()
@@ -364,19 +360,14 @@ public class BungeeCord extends ProxyServer
 
             if ( info.isQueryEnabled() )
             {
-                ChannelFutureListener bindListener = new ChannelFutureListener()
-                {
-                    @Override
-                    public void operationComplete(ChannelFuture future) throws Exception
+                ChannelFutureListener bindListener = future -> {
+                    if ( future.isSuccess() )
                     {
-                        if ( future.isSuccess() )
-                        {
-                            listeners.add( future.channel() );
-                            getLogger().log( Level.INFO, "Started query on {0}", future.channel().localAddress() );
-                        } else
-                        {
-                            getLogger().log( Level.WARNING, "Could not bind to host " + info.getHost(), future.cause() );
-                        }
+                        listeners.add( future.channel() );
+                        getLogger().log( Level.INFO, "Started query on {0}", future.channel().localAddress() );
+                    } else
+                    {
+                        getLogger().log( Level.WARNING, "Could not bind to host " + info.getHost(), future.cause() );
                     }
                 };
                 new RemoteQuery( this, info ).start( PipelineUtils.getDatagramChannel(), new InetSocketAddress( info.getHost().getAddress(), info.getQueryPort() ), eventLoops, bindListener );
@@ -722,15 +713,9 @@ public class BungeeCord extends ProxyServer
             return Collections.singleton( exactMatch );
         }
 
-        return Sets.newHashSet( Iterables.filter( getPlayers(), new Predicate<ProxiedPlayer>()
-        {
-
-            @Override
-            public boolean apply(ProxiedPlayer input)
-            {
-                return ( input == null ) ? false : input.getName().toLowerCase().startsWith( partialName.toLowerCase() );
-            }
-        } ) );
+        return getPlayers().stream()
+                .filter( input -> input != null && input.getName().toLowerCase().startsWith( partialName.toLowerCase() ) )
+                .collect( Collectors.toSet() );
     }
 
     @Override

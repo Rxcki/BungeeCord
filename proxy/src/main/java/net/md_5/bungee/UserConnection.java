@@ -285,34 +285,28 @@ public final class UserConnection implements ProxiedPlayer
                 ch.pipeline().get( HandlerBoss.class ).setHandler( new ServerConnector( bungee, UserConnection.this, target ) );
             }
         };
-        ChannelFutureListener listener = new ChannelFutureListener()
-        {
-            @Override
-            @SuppressWarnings("ThrowableResultIgnored")
-            public void operationComplete(ChannelFuture future) throws Exception
+        ChannelFutureListener listener = future -> {
+            if ( callback != null )
             {
-                if ( callback != null )
-                {
-                    callback.done( future.isSuccess(), future.cause() );
-                }
+                callback.done( future.isSuccess(), future.cause() );
+            }
 
-                if ( !future.isSuccess() )
-                {
-                    future.channel().close();
-                    pendingConnects.remove( target );
+            if ( !future.isSuccess() )
+            {
+                future.channel().close();
+                pendingConnects.remove( target );
 
-                    ServerInfo def = updateAndGetNextServer( target );
-                    if ( retry && def != null && ( getServer() == null || def != getServer().getInfo() ) )
-                    {
-                        sendMessage( bungee.getTranslation( "fallback_lobby" ) );
-                        connect( def, null, false );
-                    } else if ( dimensionChange )
-                    {
-                        disconnect( bungee.getTranslation( "fallback_kick", future.cause().getClass().getName() ) );
-                    } else
-                    {
-                        sendMessage( bungee.getTranslation( "fallback_kick", future.cause().getClass().getName() ) );
-                    }
+                ServerInfo def = updateAndGetNextServer( target );
+                if ( retry && def != null && ( getServer() == null || def != getServer().getInfo() ) )
+                {
+                    sendMessage( bungee.getTranslation( "fallback_lobby" ) );
+                    connect( def, null, false );
+                } else if ( dimensionChange )
+                {
+                    disconnect( bungee.getTranslation( "fallback_kick", future.cause().getClass().getName() ) );
+                } else
+                {
+                    sendMessage( bungee.getTranslation( "fallback_kick", future.cause().getClass().getName() ) );
                 }
             }
         };
@@ -362,16 +356,11 @@ public final class UserConnection implements ProxiedPlayer
             // As such, despite the protocol switch packets already having been sent, there is the possibility of a client side exception
             // To help combat this we will wait half a second before actually sending the disconnected packet so that whoever is on the other
             // end has a somewhat better chance of receiving the proper packet.
-            ch.getHandle().eventLoop().schedule( new Runnable()
-            {
-
-                @Override
-                public void run()
-                {
-                    unsafe().sendPacket( new Kick( ComponentSerializer.toString( reason ) ) );
-                    ch.close();
-                }
+            ch.getHandle().eventLoop().schedule( ( Runnable ) () -> {
+                unsafe().sendPacket( new Kick( ComponentSerializer.toString( reason ) ) );
+                ch.close();
             }, 500, TimeUnit.MILLISECONDS );
+
 
             if ( server != null )
             {

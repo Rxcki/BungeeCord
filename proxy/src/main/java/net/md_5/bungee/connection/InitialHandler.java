@@ -153,38 +153,33 @@ public class InitialHandler extends PacketHandler implements PendingConnection
                 new ServerPing.Players( listener.getMaxPlayers(), bungee.getOnlineCount(), null ),
                 new TextComponent( TextComponent.fromLegacyText( listener.getMotd() ) ), (Favicon) null );
 
-        Callback<ProxyPingEvent> callback = new Callback<ProxyPingEvent>()
-        {
-            @Override
-            public void done(ProxyPingEvent result, Throwable error)
+        Callback<ProxyPingEvent> callback = (result, error) -> {
+            if ( ch.isClosed() )
             {
-                if ( ch.isClosed() )
-                {
-                    return;
-                }
-
-                ServerPing legacy = result.getResponse();
-                String kickMessage;
-
-                if ( v1_5 )
-                {
-                    kickMessage = ChatColor.DARK_BLUE
-                            + "\00" + 127
-                            + '\00' + legacy.getVersion().getName()
-                            + '\00' + getFirstLine( legacy.getDescription() )
-                            + '\00' + legacy.getPlayers().getOnline()
-                            + '\00' + legacy.getPlayers().getMax();
-                } else
-                {
-                    // Clients <= 1.3 don't support colored motds because the color char is used as delimiter
-                    kickMessage = ChatColor.stripColor( getFirstLine( legacy.getDescription() ) )
-                            + '\u00a7' + legacy.getPlayers().getOnline()
-                            + '\u00a7' + legacy.getPlayers().getMax();
-                }
-
-                ch.getHandle().writeAndFlush( kickMessage );
-                ch.close();
+                return;
             }
+
+            ServerPing legacy1 = result.getResponse();
+            String kickMessage;
+
+            if ( v1_5 )
+            {
+                kickMessage = ChatColor.DARK_BLUE
+                        + "\00" + 127
+                        + '\00' + legacy1.getVersion().getName()
+                        + '\00' + getFirstLine( legacy1.getDescription() )
+                        + '\00' + legacy1.getPlayers().getOnline()
+                        + '\00' + legacy1.getPlayers().getMax();
+            } else
+            {
+                // Clients <= 1.3 don't support colored motds because the color char is used as delimiter
+                kickMessage = ChatColor.stripColor( getFirstLine( legacy1.getDescription() ) )
+                        + '\u00a7' + legacy1.getPlayers().getOnline()
+                        + '\u00a7' + legacy1.getPlayers().getMax();
+            }
+
+            ch.getHandle().writeAndFlush( kickMessage );
+            ch.close();
         };
 
         bungee.getPluginManager().callEvent( new ProxyPingEvent( this, legacy, callback ) );
@@ -204,30 +199,20 @@ public class InitialHandler extends PacketHandler implements PendingConnection
         ServerInfo forced = AbstractReconnectHandler.getForcedHost( this );
         final String motd = ( forced != null ) ? forced.getMotd() : listener.getMotd();
 
-        Callback<ServerPing> pingBack = new Callback<ServerPing>()
-        {
-            @Override
-            public void done(ServerPing result, Throwable error)
+        Callback<ServerPing> pingBack = (result, error) -> {
+            if ( error != null )
             {
-                if ( error != null )
-                {
-                    result = new ServerPing();
-                    result.setDescription( bungee.getTranslation( "ping_cannot_connect" ) );
-                    bungee.getLogger().log( Level.WARNING, "Error pinging remote server", error );
-                }
-
-                Callback<ProxyPingEvent> callback = new Callback<ProxyPingEvent>()
-                {
-                    @Override
-                    public void done(ProxyPingEvent pingResult, Throwable error)
-                    {
-                        Gson gson = BungeeCord.getInstance().gson;
-                        unsafe.sendPacket( new StatusResponse( gson.toJson( pingResult.getResponse() ) ) );
-                    }
-                };
-
-                bungee.getPluginManager().callEvent( new ProxyPingEvent( InitialHandler.this, result, callback ) );
+                result = new ServerPing();
+                result.setDescription( bungee.getTranslation( "ping_cannot_connect" ) );
+                bungee.getLogger().log( Level.WARNING, "Error pinging remote server", error );
             }
+
+            Callback<ProxyPingEvent> callback = (pingResult, error1) -> {
+                Gson gson = BungeeCord.getInstance().gson;
+                unsafe.sendPacket( new StatusResponse( gson.toJson( pingResult.getResponse() ) ) );
+            };
+
+            bungee.getPluginManager().callEvent( new ProxyPingEvent( InitialHandler.this, result, callback ) );
         };
 
         if ( forced != null && listener.isPingPassthrough() )
@@ -354,30 +339,24 @@ public class InitialHandler extends PacketHandler implements PendingConnection
             return;
         }
 
-        Callback<PreLoginEvent> callback = new Callback<PreLoginEvent>()
-        {
-
-            @Override
-            public void done(PreLoginEvent result, Throwable error)
+        Callback<PreLoginEvent> callback = (result, error) -> {
+            if ( result.isCancelled() )
             {
-                if ( result.isCancelled() )
-                {
-                    disconnect( result.getCancelReason() );
-                    return;
-                }
-                if ( ch.isClosed() )
-                {
-                    return;
-                }
-                if ( onlineMode )
-                {
-                    unsafe().sendPacket( request = EncryptionUtil.encryptRequest() );
-                } else
-                {
-                    finish();
-                }
-                thisState = State.ENCRYPT;
+                disconnect( result.getCancelReason() );
+                return;
             }
+            if ( ch.isClosed() )
+            {
+                return;
+            }
+            if ( onlineMode )
+            {
+                unsafe().sendPacket( request = EncryptionUtil.encryptRequest() );
+            } else
+            {
+                finish();
+            }
+            thisState = State.ENCRYPT;
         };
 
         // fire pre login event
@@ -409,27 +388,22 @@ public class InitialHandler extends PacketHandler implements PendingConnection
 
         String authURL = "https://sessionserver.mojang.com/session/minecraft/hasJoined?username=" + encName + "&serverId=" + encodedHash;
 
-        Callback<String> handler = new Callback<String>()
-        {
-            @Override
-            public void done(String result, Throwable error)
+        Callback<String> handler = (result, error) -> {
+            if ( error == null )
             {
-                if ( error == null )
+                LoginResult obj = BungeeCord.getInstance().gson.fromJson( result, LoginResult.class );
+                if ( obj != null )
                 {
-                    LoginResult obj = BungeeCord.getInstance().gson.fromJson( result, LoginResult.class );
-                    if ( obj != null )
-                    {
-                        loginProfile = obj;
-                        uniqueId = Util.getUUID( obj.getId() );
-                        finish();
-                        return;
-                    }
-                    disconnect( "Not authenticated with Minecraft.net" );
-                } else
-                {
-                    disconnect( bungee.getTranslation( "mojang_fail" ) );
-                    bungee.getLogger().log( Level.SEVERE, "Error authenticating " + getName() + " with minecraft.net", error );
+                    loginProfile = obj;
+                    uniqueId = Util.getUUID( obj.getId() );
+                    finish();
+                    return;
                 }
+                disconnect( "Not authenticated with Minecraft.net" );
+            } else
+            {
+                disconnect( bungee.getTranslation( "mojang_fail" ) );
+                bungee.getLogger().log( Level.SEVERE, "Error authenticating " + getName() + " with minecraft.net", error );
             }
         };
 
@@ -474,57 +448,47 @@ public class InitialHandler extends PacketHandler implements PendingConnection
             uniqueId = offlineId;
         }
 
-        Callback<LoginEvent> complete = new Callback<LoginEvent>()
-        {
-            @Override
-            public void done(LoginEvent result, Throwable error)
+        Callback<LoginEvent> complete = (result, error) -> {
+            if ( result.isCancelled() )
             {
-                if ( result.isCancelled() )
-                {
-                    disconnect( result.getCancelReason() );
-                    return;
-                }
-                if ( ch.isClosed() )
-                {
-                    return;
-                }
-
-                ch.getHandle().eventLoop().execute( new Runnable()
-                {
-                    @Override
-                    public void run()
-                    {
-                        if ( ch.getHandle().isActive() )
-                        {
-                            UserConnection userCon = new UserConnection( bungee, ch, getName(), InitialHandler.this );
-                            userCon.setCompressionThreshold( BungeeCord.getInstance().config.getCompressionThreshold() );
-                            userCon.init();
-
-                            unsafe.sendPacket( new LoginSuccess( getUniqueId().toString(), getName() ) ); // With dashes in between
-                            ch.setProtocol( Protocol.GAME );
-
-                            ch.getHandle().pipeline().get( HandlerBoss.class ).setHandler( new UpstreamBridge( bungee, userCon ) );
-                            bungee.getPluginManager().callEvent( new PostLoginEvent( userCon ) );
-                            ServerInfo server;
-                            if ( bungee.getReconnectHandler() != null )
-                            {
-                                server = bungee.getReconnectHandler().getServer( userCon );
-                            } else
-                            {
-                                server = AbstractReconnectHandler.getForcedHost( InitialHandler.this );
-                            }
-                            if ( server == null )
-                            {
-                                server = bungee.getServerInfo( listener.getDefaultServer() );
-                            }
-
-                            userCon.connect( server, null, true );
-
-                            thisState = State.FINISHED;
-                        }
-                    }
-                } );
+                disconnect( result.getCancelReason() );
+                return;
             }
+            if ( ch.isClosed() )
+            {
+                return;
+            }
+
+            ch.getHandle().eventLoop().execute( () -> {
+                if ( ch.getHandle().isActive() )
+                {
+                    UserConnection userCon = new UserConnection( bungee, ch, getName(), InitialHandler.this );
+                    userCon.setCompressionThreshold( BungeeCord.getInstance().config.getCompressionThreshold() );
+                    userCon.init();
+
+                    unsafe.sendPacket( new LoginSuccess( getUniqueId().toString(), getName() ) ); // With dashes in between
+                    ch.setProtocol( Protocol.GAME );
+
+                    ch.getHandle().pipeline().get( HandlerBoss.class ).setHandler( new UpstreamBridge( bungee, userCon ) );
+                    bungee.getPluginManager().callEvent( new PostLoginEvent( userCon ) );
+                    ServerInfo server;
+                    if ( bungee.getReconnectHandler() != null )
+                    {
+                        server = bungee.getReconnectHandler().getServer( userCon );
+                    } else
+                    {
+                        server = AbstractReconnectHandler.getForcedHost( InitialHandler.this );
+                    }
+                    if ( server == null )
+                    {
+                        server = bungee.getServerInfo( listener.getDefaultServer() );
+                    }
+
+                    userCon.connect( server, null, true );
+
+                    thisState = State.FINISHED;
+                }
+            } );
         };
 
         // fire login event
@@ -548,18 +512,12 @@ public class InitialHandler extends PacketHandler implements PendingConnection
             // As such, despite the protocol switch packets already having been sent, there is the possibility of a client side exception
             // To help combat this we will wait half a second before actually sending the disconnected packet so that whoever is on the other
             // end has a somewhat better chance of receiving the proper packet.
-            ch.getHandle().eventLoop().schedule( new Runnable()
-            {
-
-                @Override
-                public void run()
+            ch.getHandle().eventLoop().schedule( ( Runnable ) () -> {
+                if ( thisState != State.STATUS && thisState != State.PING )
                 {
-                    if ( thisState != State.STATUS && thisState != State.PING )
-                    {
-                        unsafe().sendPacket( new Kick( ComponentSerializer.toString( reason ) ) );
-                    }
-                    ch.close();
+                    unsafe().sendPacket( new Kick( ComponentSerializer.toString( reason ) ) );
                 }
+                ch.close();
             }, 500, TimeUnit.MILLISECONDS );
         }
     }
