@@ -6,7 +6,6 @@ import java.math.BigInteger;
 import java.net.InetSocketAddress;
 import java.net.URLEncoder;
 import java.security.MessageDigest;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.logging.Level;
@@ -191,10 +190,31 @@ public class InitialHandler extends PacketHandler implements PendingConnection
         return pos == -1 ? str : str.substring( 0, pos );
     }
 
+    /**
+     * <p>Checks whether the current state of this connection equals the expected state.</p>
+     * If states do not fit, this method gives a log information and disconnects without delay.
+     *
+     * @param expectedState the state this InitialHandler has to be in
+     * @return {@code false} if the states do not equal and whether the handling of the packet should be <b>aborted</b>
+     */
+    private boolean checkState(State expectedState)
+    {
+        if (thisState != expectedState)
+        {
+            bungee.getLogger().log( Level.WARNING, "{0} Not expecting {1}", new Object[]{ this, expectedState } );
+            disconnect( "Not expecting " + thisState, false );
+            return false;
+        }
+        return true;
+    }
+
     @Override
     public void handle(StatusRequest statusRequest) throws Exception
     {
-        Preconditions.checkState( thisState == State.STATUS, "Not expecting STATUS" );
+        if ( !checkState( State.STATUS ) )
+        {
+            return;
+        }
 
         ServerInfo forced = AbstractReconnectHandler.getForcedHost( this );
         final String motd = ( forced != null ) ? forced.getMotd() : listener.getMotd();
@@ -234,7 +254,10 @@ public class InitialHandler extends PacketHandler implements PendingConnection
     @Override
     public void handle(PingPacket ping) throws Exception
     {
-        Preconditions.checkState( thisState == State.PING, "Not expecting PING" );
+        if ( !checkState( State.PING ) )
+        {
+            return;
+        }
         unsafe.sendPacket( ping );
         disconnect( "" );
     }
@@ -242,7 +265,10 @@ public class InitialHandler extends PacketHandler implements PendingConnection
     @Override
     public void handle(Handshake handshake) throws Exception
     {
-        Preconditions.checkState( thisState == State.HANDSHAKE, "Not expecting HANDSHAKE" );
+        if ( !checkState( State.HANDSHAKE ) )
+        {
+            return;
+        }
         this.handshake = handshake;
         ch.setVersion( handshake.getProtocolVersion() );
 
@@ -303,7 +329,10 @@ public class InitialHandler extends PacketHandler implements PendingConnection
     @Override
     public void handle(LoginRequest loginRequest) throws Exception
     {
-        Preconditions.checkState( thisState == State.USERNAME, "Not expecting USERNAME" );
+        if ( !checkState( State.USERNAME ) )
+        {
+            return;
+        }
         this.loginRequest = loginRequest;
 
         if ( !Protocol.supportedVersions.contains( handshake.getProtocolVersion() ) )
@@ -366,7 +395,10 @@ public class InitialHandler extends PacketHandler implements PendingConnection
     @Override
     public void handle(final EncryptionResponse encryptResponse) throws Exception
     {
-        Preconditions.checkState( thisState == State.ENCRYPT, "Not expecting ENCRYPT" );
+        if ( !checkState( State.ENCRYPT ) )
+        {
+            return;
+        }
 
         SecretKey sharedKey = EncryptionUtil.getSecret( encryptResponse, request );
         BungeeCipher decrypt = EncryptionUtil.getCipher( false, sharedKey );
