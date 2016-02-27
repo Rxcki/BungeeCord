@@ -352,6 +352,9 @@ public class BungeeCord extends ProxyServer
             new ServerBootstrap()
                     .channel( PipelineUtils.getServerChannel() )
                     .option( ChannelOption.SO_REUSEADDR, true ) // TODO: Move this elsewhere!
+                    // the next two options help against jvm gc spikes, says @Iceee
+                    .childOption( ChannelOption.WRITE_BUFFER_HIGH_WATER_MARK, 1024 * 1024 * 10 )
+                    .childOption( ChannelOption.WRITE_BUFFER_LOW_WATER_MARK, 1024 * 1024 )
                     .childAttr( PipelineUtils.LISTENER, info )
                     .childHandler( PipelineUtils.SERVER_CHILD )
                     .group( eventLoops )
