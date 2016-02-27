@@ -124,6 +124,9 @@ public class PipelineUtils
             {
                 // IP_TOS is not supported (Windows XP / Windows Server 2003)
             }
+            // Minecraft packets are too big to benefit from Nagle's algorithm, which we disable here, says @minecrafter
+            // CraftBukkit / Spigot use this option also according to
+            ch.config().setOption( ChannelOption.TCP_NODELAY, true );
             ch.config().setAllocator( PooledByteBufAllocator.DEFAULT );
 
             ch.pipeline().addLast( TIMEOUT_HANDLER, new ReadTimeoutHandler( BungeeCord.getInstance().config.getTimeout(), TimeUnit.MILLISECONDS ) );
