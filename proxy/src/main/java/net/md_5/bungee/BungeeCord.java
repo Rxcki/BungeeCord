@@ -112,7 +112,7 @@ public class BungeeCord extends ProxyServer
      * Localization bundle.
      */
     public ResourceBundle bundle;
-    public EventLoopGroup eventLoops;
+    public EventLoopGroup bossEventLoopGroup, workerEventLoopGroup, queryEventLoopGroup;
     /**
      * locations.yml save thread.
      */
@@ -298,7 +298,8 @@ public class BungeeCord extends ProxyServer
             ResourceLeakDetector.setLevel( ResourceLeakDetector.Level.DISABLED ); // Eats performance
         }
 
-        eventLoops = PipelineUtils.newEventLoopGroup( 0, new ThreadFactoryBuilder().setNameFormat( "Netty IO Thread #%1$d" ).build() );
+        bossEventLoopGroup = PipelineUtils.newEventLoopGroup( 0, new ThreadFactoryBuilder().setNameFormat( "Netty Boss IO Thread #%1$d" ).build() );
+        workerEventLoopGroup = PipelineUtils.newEventLoopGroup( 0, new ThreadFactoryBuilder().setNameFormat( "Netty Worker IO Thread #%1$d" ).build() );
 
         File moduleDirectory = new File( "modules" );
         config.load();
@@ -357,12 +358,13 @@ public class BungeeCord extends ProxyServer
                     .childOption( ChannelOption.WRITE_BUFFER_LOW_WATER_MARK, 1024 * 1024 )
                     .childAttr( PipelineUtils.LISTENER, info )
                     .childHandler( PipelineUtils.SERVER_CHILD )
-                    .group( eventLoops )
+                    .group( bossEventLoopGroup, workerEventLoopGroup )
                     .localAddress( info.getHost() )
                     .bind().addListener( listener );
 
             if ( info.isQueryEnabled() )
             {
+                queryEventLoopGroup = PipelineUtils.newEventLoopGroup( 0, new ThreadFactoryBuilder().setNameFormat( "Netty Query IO Thread #%1$d" ).build() );
                 ChannelFutureListener bindListener = future -> {
                     if ( future.isSuccess() )
                     {
@@ -373,7 +375,7 @@ public class BungeeCord extends ProxyServer
                         getLogger().log( Level.WARNING, "Could not bind to host " + info.getHost(), future.cause() );
                     }
                 };
-                new RemoteQuery( this, info ).start( PipelineUtils.getDatagramChannel(), new InetSocketAddress( info.getHost().getAddress(), info.getQueryPort() ), eventLoops, bindListener );
+                new RemoteQuery( this, info ).start( PipelineUtils.getDatagramChannel(), new InetSocketAddress( info.getHost().getAddress(), info.getQueryPort() ), queryEventLoopGroup, bindListener );
             }
         }
     }
@@ -429,12 +431,32 @@ public class BungeeCord extends ProxyServer
                 }
 
                 getLogger().info( "Closing IO threads" );
-                eventLoops.shutdownGracefully();
+                bossEventLoopGroup.shutdownGracefully();
+                workerEventLoopGroup.shutdownGracefully();
+                if (queryEventLoopGroup != null)
+                {
+                    queryEventLoopGroup.shutdownGracefully();
+                }
                 try
                 {
-                    eventLoops.awaitTermination( Long.MAX_VALUE, TimeUnit.NANOSECONDS );
+                    bossEventLoopGroup.awaitTermination( Long.MAX_VALUE, TimeUnit.NANOSECONDS );
                 } catch ( InterruptedException ex )
                 {
+                }
+                try
+                {
+                    workerEventLoopGroup.awaitTermination( Long.MAX_VALUE, TimeUnit.NANOSECONDS );
+                } catch ( InterruptedException ex )
+                {
+                }
+                if (queryEventLoopGroup != null)
+                {
+                    try
+                    {
+                        queryEventLoopGroup.awaitTermination( Long.MAX_VALUE, TimeUnit.NANOSECONDS );
+                    } catch ( InterruptedException ex )
+                    {
+                    }
                 }
 
                 if ( reconnectHandler != null )
