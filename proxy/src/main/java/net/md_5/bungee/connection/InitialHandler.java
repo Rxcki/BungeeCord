@@ -202,7 +202,7 @@ public class InitialHandler extends PacketHandler implements PendingConnection
         if (thisState != expectedState)
         {
             bungee.getLogger().log( Level.WARNING, "{0} Not expecting {1}", new Object[]{ this, expectedState } );
-            disconnect( "Not expecting " + thisState, false );
+            disconnect( "Not expecting " + thisState );
             return false;
         }
         return true;
@@ -539,18 +539,13 @@ public class InitialHandler extends PacketHandler implements PendingConnection
         if ( !disconnecting || !ch.isClosed() )
         {
             disconnecting = true;
-            // Why do we have to delay this you might ask? Well the simple reason is MOJANG.
-            // Despite many a bug report posted, ever since the 1.7 protocol rewrite, the client STILL has a race condition upon switching protocols.
-            // As such, despite the protocol switch packets already having been sent, there is the possibility of a client side exception
-            // To help combat this we will wait half a second before actually sending the disconnected packet so that whoever is on the other
-            // end has a somewhat better chance of receiving the proper packet.
-            ch.getHandle().eventLoop().schedule( ( Runnable ) () -> {
-                if ( thisState != State.STATUS && thisState != State.PING )
-                {
-                    unsafe().sendPacket( new Kick( ComponentSerializer.toString( reason ) ) );
-                }
+            if ( thisState != State.STATUS && thisState != State.PING )
+            {
+                ch.close( new Kick( ComponentSerializer.toString( reason ) ) );
+            } else
+            {
                 ch.close();
-            }, 500, TimeUnit.MILLISECONDS );
+            }
         }
     }
 

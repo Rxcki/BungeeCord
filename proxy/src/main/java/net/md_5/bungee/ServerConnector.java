@@ -99,7 +99,7 @@ public class ServerConnector extends PacketHandler
             copiedHandshake.setHost( newHost );
         } else if ( !user.getExtraDataInHandshake().isEmpty() )
         {
-            // Only restore the extra data if IP forwarding is off. 
+            // Only restore the extra data if IP forwarding is off.
             // TODO: Add support for this data with IP forwarding.
             copiedHandshake.setHost( copiedHandshake.getHost() + user.getExtraDataInHandshake() );
         }
@@ -230,13 +230,14 @@ public class ServerConnector extends PacketHandler
             user.unsafe().sendPacket( new Respawn( login.getDimension(), login.getDifficulty(), login.getGameMode(), login.getLevelType() ) );
 
             // Remove from old servers
-            user.getServer().disconnect( "Quitting" );
+            user.getServer().setObsolete( true );
+            user.getServer().disconnect();
         }
 
         // TODO: Fix this?
         if ( !user.isActive() )
         {
-            server.disconnect( "Quitting" );
+            server.disconnect();
             // Silly server admins see stack trace and die
             bungee.getLogger().warning( "No client connected for pending server!" );
             return;

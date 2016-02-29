@@ -1,5 +1,6 @@
 package net.md_5.bungee.netty;
 
+import io.netty.channel.ChannelFutureListener;
 import net.md_5.bungee.compress.PacketCompressor;
 import net.md_5.bungee.compress.PacketDecompressor;
 import net.md_5.bungee.protocol.PacketWrapper;
@@ -38,28 +39,40 @@ public class ChannelWrapper
 
     public void write(Object packet)
     {
-        if ( !closed )
+        if ( !isClosed() )
         {
             if ( packet instanceof PacketWrapper )
             {
                 ( (PacketWrapper) packet ).setReleased( true );
-                ch.write( ( (PacketWrapper) packet ).buf, ch.voidPromise() );
+                ch.writeAndFlush( ( (PacketWrapper) packet ).buf, ch.voidPromise());
             } else
             {
-                ch.write( packet, ch.voidPromise() );
+                ch.writeAndFlush( packet, ch.voidPromise() );
             }
-            ch.flush();
         }
     }
 
     public void close()
     {
-        if ( !closed )
+        if ( !isClosed() )
         {
             closed = true;
-            ch.flush();
-            ch.close();
+            ch.flush().close();
         }
+    }
+
+    public void close(Object packet)
+    {
+        if ( !isClosed() )
+        {
+            closed = true;
+            ch.writeAndFlush( packet ).addListeners( ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE, ChannelFutureListener.CLOSE );
+        }
+    }
+
+    public boolean isClosed()
+    {
+        return closed || !ch.isActive();
     }
 
     public void addBefore(String baseName, String name, ChannelHandler handler)
