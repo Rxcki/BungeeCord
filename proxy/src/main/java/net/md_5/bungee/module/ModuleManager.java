@@ -57,6 +57,12 @@ public class ModuleManager
             return;
         }
 
+        if ( bungeeVersion.getBuild().equals("0") )
+        {
+            proxy.getLogger().info( "Default build version '0' detected, custom FlexPipe build. Module download is skipped.");
+            return;
+        }
+
         List<ModuleSpec> modules = new ArrayList<>();
         File configFile = new File( "modules.yml" );
         // Start Yaml
