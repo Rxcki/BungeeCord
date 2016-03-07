@@ -228,7 +228,8 @@ public class InitialHandler extends PacketHandler implements PendingConnection
             }
 
             Callback<ProxyPingEvent> callback = (pingResult, error1) -> {
-                Gson gson = BungeeCord.getInstance().gson;
+                Gson gson = BungeeCord.getInstance().getGson( handshake.getProtocolVersion() );
+
                 unsafe.sendPacket( new StatusResponse( gson.toJson( pingResult.getResponse() ) ) );
             };
 
@@ -423,7 +424,7 @@ public class InitialHandler extends PacketHandler implements PendingConnection
         Callback<String> handler = (result, error) -> {
             if ( error == null )
             {
-                LoginResult obj = BungeeCord.getInstance().gson.fromJson( result, LoginResult.class );
+                LoginResult obj = BungeeCord.getInstance().getLatestGson().fromJson( result, LoginResult.class );
                 if ( obj != null )
                 {
                     loginProfile = obj;

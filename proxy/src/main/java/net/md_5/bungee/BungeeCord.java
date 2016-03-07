@@ -19,6 +19,7 @@ import net.md_5.bungee.api.Favicon;
 import net.md_5.bungee.api.ServerPing;
 import net.md_5.bungee.api.Title;
 import net.md_5.bungee.api.chat.TranslatableComponent;
+import net.md_5.bungee.chat.LegacyMotdSerializer;
 import net.md_5.bungee.chat.TextComponentSerializer;
 import net.md_5.bungee.chat.TranslatableComponentSerializer;
 import net.md_5.bungee.module.ModuleManager;
@@ -149,12 +150,40 @@ public class BungeeCord extends ProxyServer
     private final ConsoleReader consoleReader;
     @Getter
     private final Logger logger;
-    public final Gson gson = new GsonBuilder()
+    private final Gson gson = new GsonBuilder()
             .registerTypeAdapter( BaseComponent.class, new ComponentSerializer() )
             .registerTypeAdapter( TextComponent.class, new TextComponentSerializer() )
             .registerTypeAdapter( TranslatableComponent.class, new TranslatableComponentSerializer() )
-            .registerTypeAdapter( ServerPing.PlayerInfo.class, new PlayerInfoSerializer() )
+            .registerTypeAdapter( ServerPing.PlayerInfo.class, new PlayerInfoSerializer( ProtocolConstants.MINECRAFT_1_9 ) )
             .registerTypeAdapter( Favicon.class, Favicon.getFaviconTypeAdapter() ).create();
+    private final Gson gson1_7_2 = new GsonBuilder()
+        .registerTypeAdapter( BaseComponent.class, new LegacyMotdSerializer() )
+        .registerTypeAdapter( ServerPing.PlayerInfo.class, new PlayerInfoSerializer( ProtocolConstants.MINECRAFT_1_7_2 ) )
+        .registerTypeAdapter( Favicon.class, Favicon.getFaviconTypeAdapter() ).create();
+    private final Gson gson1_8 = new GsonBuilder()
+        .registerTypeAdapter( BaseComponent.class, new LegacyMotdSerializer() )
+        .registerTypeAdapter( ServerPing.PlayerInfo.class, new PlayerInfoSerializer( ProtocolConstants.MINECRAFT_1_8 ) )
+        .registerTypeAdapter( Favicon.class, Favicon.getFaviconTypeAdapter() ).create();
+
+    public final Gson getLatestGson()
+    {
+        return gson;
+    }
+
+    public final Gson getGson(int protocol)
+    {
+        if ( protocol <= ProtocolConstants.MINECRAFT_1_7_2 )
+        {
+            return BungeeCord.getInstance().gson1_7_2;
+        } else if ( protocol <= ProtocolConstants.MINECRAFT_1_8 )
+        {
+            return BungeeCord.getInstance().gson1_8;
+        } else
+        {
+            return BungeeCord.getInstance().gson;
+        }
+    }
+
     @Getter
     private ConnectionThrottle connectionThrottle;
     private final ModuleManager moduleManager = new ModuleManager();
