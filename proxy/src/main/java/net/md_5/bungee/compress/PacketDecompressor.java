@@ -5,13 +5,17 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageDecoder;
 import java.util.List;
+import lombok.RequiredArgsConstructor;
 import net.md_5.bungee.jni.zlib.BungeeZlib;
 import net.md_5.bungee.protocol.DefinedPacket;
 
+@RequiredArgsConstructor
 public class PacketDecompressor extends MessageToMessageDecoder<ByteBuf>
 {
 
     private final BungeeZlib zlib = CompressFactory.zlib.newInstance();
+
+    private final int compressionThreshold;
 
     @Override
     public void handlerAdded(ChannelHandlerContext ctx) throws Exception
@@ -35,6 +39,7 @@ public class PacketDecompressor extends MessageToMessageDecoder<ByteBuf>
             in.skipBytes( in.readableBytes() );
         } else
         {
+            Preconditions.checkState( size >= compressionThreshold, "Decompressed size %s less than compression threshold %s", size, compressionThreshold );
             ByteBuf decompressed = ctx.alloc().directBuffer();
 
             try
