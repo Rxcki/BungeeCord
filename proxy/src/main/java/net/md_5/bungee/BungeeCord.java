@@ -562,14 +562,15 @@ public class BungeeCord extends ProxyServer
     @Override
     public String getTranslation(String name, Object... args)
     {
-        String translation = "<translation '" + name + "' missing>";
         try
         {
-            translation = MessageFormat.format( bundle.getString( name ), args );
+            String translationPattern = bundle.getString( name );
+
+            return args.length == 0 ? translationPattern : MessageFormat.format( translationPattern, args );
         } catch ( MissingResourceException ex )
         {
+            return "<translation '" + name + "' missing>";
         }
-        return translation;
     }
 
     @Override
