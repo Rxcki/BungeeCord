@@ -6,6 +6,7 @@ import com.google.common.collect.Iterables;
 import java.util.Collections;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.config.ServerInfo;
@@ -76,13 +77,24 @@ public class CommandServer extends Command implements TabExecutor
         }
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public Iterable<String> onTabComplete(final CommandSender sender, final String[] args)
     {
-        final String lower = ( args.length == 0 ) ? "" : args[0].toLowerCase();
+        if ( args.length > 1 )
+        {
+            return Collections.EMPTY_LIST;
+        }
 
-        return ( args.length > 1 ) ? Collections.EMPTY_LIST : ProxyServer.getInstance().getServers().values().stream()
-                .filter( input -> input.getName().toLowerCase().startsWith( lower ) && input.canAccess( sender ) )
+        Stream<ServerInfo> stream = ProxyServer.getInstance().getServers().values().stream();
+
+        if (args.length == 0 )
+        {
+            stream = stream.filter( input -> input.canAccess( sender ) );
+        } else {
+            stream = stream.filter( input -> input.getName().regionMatches( true, 0, args[ 0 ], 0, args[ 0 ].length() ) && input.canAccess( sender ) );
+        }
+        return stream
                 .map( ServerInfo::getName )
                 .collect( Collectors.toList() );
     }

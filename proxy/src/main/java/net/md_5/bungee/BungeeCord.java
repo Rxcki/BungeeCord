@@ -64,6 +64,8 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
+
 import jline.UnsupportedTerminal;
 import jline.console.ConsoleReader;
 import jline.internal.Log;
@@ -769,8 +771,8 @@ public class BungeeCord extends ProxyServer
         }
 
         return getPlayers().stream()
-                .filter( input -> input != null && input.getName().toLowerCase().startsWith( partialName.toLowerCase() ) )
-                .collect( Collectors.toSet() );
+            .filter(p -> p.getName().regionMatches(true, 0, partialName, 0, partialName.length()))
+            .collect(Collectors.toSet());
     }
 
     @Override
