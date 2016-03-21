@@ -22,6 +22,7 @@ import net.md_5.bungee.api.Favicon;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.ServerPing;
 import net.md_5.bungee.api.chat.BaseComponent;
+import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.config.ListenerInfo;
 import net.md_5.bungee.api.config.ServerInfo;
@@ -40,6 +41,7 @@ import net.md_5.bungee.netty.cipher.CipherDecoder;
 import net.md_5.bungee.netty.cipher.CipherEncoder;
 import net.md_5.bungee.protocol.DefinedPacket;
 import net.md_5.bungee.protocol.PacketWrapper;
+import net.md_5.bungee.protocol.packet.Chat;
 import net.md_5.bungee.protocol.packet.Handshake;
 import net.md_5.bungee.protocol.packet.PluginMessage;
 import net.md_5.bungee.protocol.packet.EncryptionResponse;
@@ -620,5 +622,14 @@ public class InitialHandler extends PacketHandler implements PendingConnection
     public boolean isConnected()
     {
         return !ch.isClosed();
+    }
+
+    private static final BaseComponent[] CHAT_TOO_EARLY_DISCONNECT_REASON = new ComponentBuilder( "You may not chat right now." ).color( ChatColor.RED ).create();
+
+    @Override
+    public void handle(Chat chat) throws Exception
+    {
+        // I don't know whether anyone is so dump to send chat messages that early and whether it gets stopped earlier, but this code does not hurt
+        disconnect( CHAT_TOO_EARLY_DISCONNECT_REASON );
     }
 }

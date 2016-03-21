@@ -4,7 +4,10 @@ import com.google.common.base.Preconditions;
 import net.md_5.bungee.BungeeCord;
 import net.md_5.bungee.UserConnection;
 import net.md_5.bungee.Util;
+import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.ProxyServer;
+import net.md_5.bungee.api.chat.BaseComponent;
+import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.event.ChatEvent;
 import net.md_5.bungee.api.event.PlayerDisconnectEvent;
@@ -102,10 +105,21 @@ public class UpstreamBridge extends PacketHandler
         }
     }
 
+    private static final BaseComponent[] CHAT_TOO_EARLY_DISCONNECT_REASON = new ComponentBuilder( "You may not chat right now." ).color( ChatColor.RED ).create();
+
     @Override
     public void handle(Chat chat) throws Exception
     {
+        Preconditions.checkArgument( !chat.getMessage().trim().isEmpty(), "Chat message is invalid" ); // Yes, I'm sorry but these are actually sent out by some bot tools
         Preconditions.checkArgument( chat.getMessage().length() <= 100, "Chat message too long" ); // Mojang limit, check on updates
+
+        // Users can't chat if they were never on a server yet after joining
+        // Users also would get kicked if the command is not handled by the bungee with an npe, but this stops some unneccessary cpu cycles
+        if(con.getServer() == null)
+        {
+            con.disconnect( CHAT_TOO_EARLY_DISCONNECT_REASON );
+            return;
+        }
 
         ChatEvent chatEvent = new ChatEvent( con, con.getServer(), chat.getMessage() );
         if ( !bungee.getPluginManager().callEvent( chatEvent ).isCancelled() )
