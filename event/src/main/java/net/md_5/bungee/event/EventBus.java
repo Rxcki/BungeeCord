@@ -44,13 +44,10 @@ public class EventBus
                 try
                 {
                     method.invoke( event );
-                } catch ( IllegalAccessException ex )
-                {
-                    throw new Error( "Method became inaccessible: " + event, ex );
-                } catch ( IllegalArgumentException ex )
+                } catch ( ClassCastException ex )
                 {
                     throw new Error( "Method rejected target/argument: " + event, ex );
-                } catch ( InvocationTargetException ex )
+                } catch ( Throwable ex )
                 {
                     logger.log( Level.WARNING, MessageFormat.format( "Error dispatching event {0} to listener {1}", event, method.getListener() ), ex.getCause() );
                 }

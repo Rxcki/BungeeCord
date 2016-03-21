@@ -12,10 +12,15 @@ public class EventHandlerMethod
     @Getter
     private final Object listener;
     @Getter
-    private final Method method;
+    private final EventExecutor executor;
 
-    public void invoke(Object event) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException
+    public EventHandlerMethod(Object listener, Method m)
     {
-        method.invoke( listener, event );
+        this( listener, EventExecutor.create( m ) );
+    }
+
+    public void invoke(Object event) throws Throwable
+    {
+        executor.invoke( listener, event );
     }
 }
