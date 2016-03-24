@@ -1,5 +1,7 @@
 package net.md_5.bungee.connection;
 
+import me.minotopia.flexpipe.api.event.SuspiciousPlayerBehaviourEvent;
+
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import java.math.BigInteger;
@@ -22,7 +24,6 @@ import net.md_5.bungee.api.Favicon;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.ServerPing;
 import net.md_5.bungee.api.chat.BaseComponent;
-import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.config.ListenerInfo;
 import net.md_5.bungee.api.config.ServerInfo;
@@ -52,7 +53,6 @@ import net.md_5.bungee.api.event.PlayerHandshakeEvent;
 import net.md_5.bungee.api.event.PreLoginEvent;
 import net.md_5.bungee.jni.cipher.BungeeCipher;
 import net.md_5.bungee.protocol.Protocol;
-import net.md_5.bungee.protocol.ProtocolConstants;
 import net.md_5.bungee.protocol.packet.LegacyHandshake;
 import net.md_5.bungee.protocol.packet.LegacyPing;
 import net.md_5.bungee.protocol.packet.LoginRequest;
@@ -282,6 +282,7 @@ public class InitialHandler extends PacketHandler implements PendingConnection
             // setting protocol to login so we can send the kick message which is actually supported by the minecraft client after it sent the handshake
             ch.setProtocol( Protocol.LOGIN );
             disconnect( bungee.getTranslation( "join_throttle_kick", TimeUnit.MILLISECONDS.toSeconds( BungeeCord.getInstance().getConfig().getThrottle() ) ) );
+            BungeeCord.getInstance().getPluginManager().callEvent( new SuspiciousPlayerBehaviourEvent( this, SuspiciousPlayerBehaviourEvent.Check.JOIN_THROTTLE_TRIGGERED ) );
             return;
         }
 
@@ -624,12 +625,13 @@ public class InitialHandler extends PacketHandler implements PendingConnection
         return !ch.isClosed();
     }
 
-    private static final BaseComponent[] CHAT_TOO_EARLY_DISCONNECT_REASON = new ComponentBuilder( "You may not chat right now." ).color( ChatColor.RED ).create();
+    private static final BaseComponent[] CHAT_TOO_EARLY_DISCONNECT_REASON = new BaseComponent[]{ new TextComponent( "Outdated Client!" ) };
 
     @Override
     public void handle(Chat chat) throws Exception
     {
         // I don't know whether anyone is so dump to send chat messages that early and whether it gets stopped earlier, but this code does not hurt
         disconnect( CHAT_TOO_EARLY_DISCONNECT_REASON );
+        BungeeCord.getInstance().getPluginManager().callEvent( new SuspiciousPlayerBehaviourEvent( this, SuspiciousPlayerBehaviourEvent.Check.CHAT_TOO_EARLY ) );
     }
 }
