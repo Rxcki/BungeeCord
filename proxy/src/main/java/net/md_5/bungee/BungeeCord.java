@@ -8,6 +8,12 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.gson.GsonBuilder;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.Properties;
+import java.util.PropertyResourceBundle;
 import net.md_5.bungee.api.Favicon;
 import net.md_5.bungee.api.ServerPing;
 import net.md_5.bungee.api.Title;
@@ -34,7 +40,6 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.util.ResourceLeakDetector;
 import net.md_5.bungee.conf.Configuration;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.net.InetSocketAddress;
@@ -47,7 +52,6 @@ import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
 import java.util.MissingResourceException;
-import java.util.PropertyResourceBundle;
 import java.util.ResourceBundle;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -106,8 +110,7 @@ public class BungeeCord extends ProxyServer
     /**
      * Localization bundle.
      */
-    private ResourceBundle baseBundle;
-    private ResourceBundle customBundle;
+    public ResourceBundle bundle;
     public EventLoopGroup eventLoops;
     /**
      * locations.yml save thread.
@@ -155,7 +158,8 @@ public class BungeeCord extends ProxyServer
     private ConnectionThrottle connectionThrottle;
     private final ModuleManager moduleManager = new ModuleManager();
 
-    
+    private final File messagesFile = new File ( "messages.properties" );
+
     {
         // TODO: Proper fallback when we interface the manager
         getPluginManager().registerCommand( null, new CommandReload() );
@@ -182,18 +186,10 @@ public class BungeeCord extends ProxyServer
 
         try
         {
-            baseBundle = ResourceBundle.getBundle( "messages" );
+            bundle = ResourceBundle.getBundle( "messages" );
         } catch ( MissingResourceException ex )
         {
-            baseBundle = ResourceBundle.getBundle( "messages", Locale.ENGLISH );
-        }
-        File file = new File( "messages.properties" );
-        if ( file.isFile() )
-        {
-            try ( FileReader rd = new FileReader( file ) )
-            {
-                customBundle = new PropertyResourceBundle( rd );
-            }
+            bundle = ResourceBundle.getBundle( "messages", Locale.ENGLISH );
         }
 
         // This is a workaround for quite possibly the weirdest bug I have ever encountered in my life!
@@ -230,6 +226,57 @@ public class BungeeCord extends ProxyServer
             {
                 logger.info( "Using standard Java compressor. To enable zero copy compression, run on 64 bit Linux" );
             }
+        }
+
+        reloadMessages();
+    }
+
+    @Override
+    public void reloadMessages()
+    {
+        try // Make sure the translation file is up to date
+        {
+            Properties messages = new Properties();
+
+            if ( messagesFile.exists() )
+            {
+                try ( InputStream is = new FileInputStream( messagesFile ) )
+                {
+                    messages.load( is );
+                }
+            }
+
+            // Check for new entries
+            int newEntries = 0;
+            for ( String key : bundle.keySet() )
+            {
+                if ( !messages.containsKey( key ) )
+                {
+                    messages.put( key, bundle.getObject( key ) );
+                    newEntries++;
+                }
+            }
+
+            if ( newEntries > 0 )
+            {
+                // We need to save the file to add the new entries
+                try ( OutputStream os = new FileOutputStream( messagesFile ) )
+                {
+                    messages.store( os, "FlexPipe messages, last updated for " + getVersion() );
+                }
+            }
+        } catch ( Exception ex )
+        {
+            getLogger().log( Level.SEVERE, "Could not update messages", ex );
+        }
+
+        // Load the messages from the configuration file
+        try ( InputStream is = new FileInputStream( messagesFile ) )
+        {
+            bundle = new PropertyResourceBundle( is );
+        } catch ( Exception ex )
+        {
+            getLogger().log( Level.SEVERE, "Could not reload messages", ex );
         }
     }
 
@@ -473,7 +520,7 @@ public class BungeeCord extends ProxyServer
         String translation = "<translation '" + name + "' missing>";
         try
         {
-            translation = MessageFormat.format( customBundle != null && customBundle.containsKey( name ) ? customBundle.getString( name ) : baseBundle.getString( name ), args );
+            translation = MessageFormat.format( bundle.getString( name ), args );
         } catch ( MissingResourceException ex )
         {
         }
@@ -593,7 +640,7 @@ public class BungeeCord extends ProxyServer
     @Override
     public String getGameVersion()
     {
-        return Joiner.on( ", " ).join( ProtocolConstants.SUPPORTED_VERSIONS );
+        return Joiner.on(", ").join(ProtocolConstants.SUPPORTED_VERSIONS);
     }
 
     @Override
