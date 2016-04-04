@@ -279,8 +279,6 @@ public class InitialHandler extends PacketHandler implements PendingConnection
         {
             // setting thisState to username to stop possible code execution on repeated handshakes
             thisState = State.USERNAME;
-            // setting protocol to login so we can send the kick message which is actually supported by the minecraft client after it sent the handshake
-            ch.setProtocol( Protocol.LOGIN );
             disconnect( bungee.getTranslation( "join_throttle_kick", TimeUnit.MILLISECONDS.toSeconds( BungeeCord.getInstance().getConfig().getThrottle() ) ) );
             BungeeCord.getInstance().getPluginManager().callEvent( new SuspiciousPlayerBehaviourEvent( this, SuspiciousPlayerBehaviourEvent.Check.JOIN_THROTTLE_TRIGGERED ) );
             return;
@@ -545,7 +543,18 @@ public class InitialHandler extends PacketHandler implements PendingConnection
             disconnecting = true;
             if ( thisState != State.STATUS && thisState != State.PING )
             {
-                ch.close( new Kick( ComponentSerializer.toString( reason ) ) );
+                if ( ch.getProtocol() == Protocol.HANDSHAKE )
+                {
+                    ch.setProtocol( Protocol.LOGIN );
+                }
+                try
+                {
+                    ch.close( new Kick( ComponentSerializer.toString( reason ) ) );
+                } catch ( IllegalArgumentException ex )
+                {
+                    BungeeCord.getInstance().getLogger().log( Level.WARNING, "{0} Error while kicking: ", ex );
+                    ch.close();
+                }
             } else
             {
                 ch.close();

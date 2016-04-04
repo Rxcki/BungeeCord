@@ -24,6 +24,11 @@ public class ChannelWrapper
     {
         this.ch = ctx.channel();
     }
+    
+    public Protocol getProtocol()
+    {
+        return ch.pipeline().get( MinecraftDecoder.class ).getProtocol();
+    }
 
     public void setProtocol(Protocol protocol)
     {
