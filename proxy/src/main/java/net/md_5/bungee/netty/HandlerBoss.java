@@ -1,5 +1,7 @@
 package net.md_5.bungee.netty;
 
+import lombok.Getter;
+
 import net.md_5.bungee.protocol.PacketWrapper;
 import com.google.common.base.Preconditions;
 import io.netty.channel.ChannelHandlerContext;
@@ -23,6 +25,7 @@ public class HandlerBoss extends ChannelInboundHandlerAdapter
 {
 
     private ChannelWrapper channel;
+    @Getter
     private PacketHandler handler;
 
     public void setHandler(PacketHandler handler)

@@ -1,5 +1,6 @@
 package net.md_5.bungee.connection;
 
+import io.netty.buffer.SlicedByteBuf;
 import me.minotopia.flexpipe.api.event.SuspiciousPlayerBehaviourEvent;
 
 import com.google.common.base.Preconditions;
@@ -90,11 +91,21 @@ public class UpstreamBridge extends PacketHandler
     @Override
     public void handle(PacketWrapper packet) throws Exception
     {
-        con.getEntityRewrite().rewriteServerbound( packet.buf, con.getClientEntityId(), con.getServerEntityId() );
+        // if we get a SlicedByteBuf we know that entity rewrite is not needed - see MinecraftDecoder
+        if ( !( packet.buf instanceof SlicedByteBuf ) )
+        {
+            con.getEntityRewrite().rewriteServerbound( packet.buf, con.getClientEntityId(), con.getServerEntityId() );
+        }
         if ( con.getServer() != null )
         {
             con.getServer().getCh().write( packet );
         }
+    }
+
+    @Override
+    public boolean isEntityRewritePossiblyNeeded(int packetId)
+    {
+        return con.getEntityRewrite().isRewriteServerbound( packetId );
     }
 
     @Override

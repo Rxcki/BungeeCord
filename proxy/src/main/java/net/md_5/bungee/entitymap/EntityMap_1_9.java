@@ -170,4 +170,16 @@ class EntityMap_1_9 extends EntityMap
         }
         packet.readerIndex( readerIndex );
     }
+
+    @Override
+    protected boolean isRewriteClientbound0(int packetId)
+    {
+        return packetId == 0x49 || packetId == 0x40 || packetId == 0x30 || packetId == 0x00 || packetId == 0x05 || packetId == 0x2C;
+    }
+
+    @Override
+    protected boolean isRewriteServerbound0(int packetId)
+    {
+        return packetId == 0x1B;
+    }
 }

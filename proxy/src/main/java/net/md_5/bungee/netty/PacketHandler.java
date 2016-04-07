@@ -28,4 +28,9 @@ public abstract class PacketHandler extends net.md_5.bungee.protocol.AbstractPac
     public void disconnected(ChannelWrapper channel) throws Exception
     {
     }
+    
+    public boolean isEntityRewritePossiblyNeeded(int packetId)
+    {
+        return false;
+    }
 }

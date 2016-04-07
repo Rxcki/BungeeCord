@@ -162,4 +162,16 @@ class EntityMap_1_8 extends EntityMap
         }
         packet.readerIndex( readerIndex );
     }
+
+    @Override
+    protected boolean isRewriteClientbound0(int packetId)
+    {
+        return packetId == 0x0D || packetId == 0x1B || packetId == 0x13 || packetId == 0x0E || packetId == 0x0C || packetId == 0x42;
+    }
+
+    @Override
+    protected boolean isRewriteServerbound0(int packetId)
+    {
+        return packetId == 0x18;
+    }
 }

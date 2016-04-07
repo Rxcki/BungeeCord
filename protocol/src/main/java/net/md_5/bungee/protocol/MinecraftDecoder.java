@@ -1,5 +1,9 @@
 package net.md_5.bungee.protocol;
 
+import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.handler.codec.DecoderException;
+import net.md_5.bungee.protocol.util.SliceDecider;
+
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageDecoder;
@@ -9,7 +13,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 @AllArgsConstructor
-public class MinecraftDecoder extends MessageToMessageDecoder<ByteBuf>
+public class MinecraftDecoder extends ChannelInboundHandlerAdapter
 {
 
     @Getter
@@ -18,16 +22,27 @@ public class MinecraftDecoder extends MessageToMessageDecoder<ByteBuf>
     private final boolean server;
     @Setter
     private int protocolVersion;
+    private final SliceDecider sliceDecider;
 
-    @Override
-    protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception
+    private Object decode(ByteBuf in) throws Exception
     {
         Protocol.DirectionData prot = ( server ) ? protocol.TO_SERVER : protocol.TO_CLIENT;
-        ByteBuf slice = in.copy(); // Can't slice this one due to EntityMap :(
+        ByteBuf newBuf = null;
 
         try
         {
+            int originalReaderIndex = in.readerIndex();
+            int originalReadableBytes = in.readableBytes();
+
             int packetId = DefinedPacket.readVarInt( in );
+
+            if ( sliceDecider.shouldNotSlice( packetId ) )
+            {
+                newBuf = in.copy( originalReaderIndex, originalReadableBytes );
+            } else
+            {
+                newBuf = in.slice( originalReaderIndex, originalReadableBytes ).retain();
+            }
 
             DefinedPacket packet = prot.createPacket( packetId, protocolVersion );
             if ( packet != null )
@@ -43,13 +58,49 @@ public class MinecraftDecoder extends MessageToMessageDecoder<ByteBuf>
                 in.skipBytes( in.readableBytes() );
             }
 
-            out.add( new PacketWrapper( packet, slice ) );
-            slice = null;
+            PacketWrapper packetWrapper = new PacketWrapper( packet, newBuf );
+            newBuf = null;
+            return packetWrapper;
         } finally
         {
-            if ( slice != null )
+            if ( newBuf != null )
             {
-                slice.release();
+                newBuf.release();
+            }
+        }
+    }
+
+    @Override
+    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception
+    {
+        Object out = null;
+        try
+        {
+            if ( msg instanceof ByteBuf )
+            {
+                ByteBuf cast = ( ByteBuf ) msg;
+                try
+                {
+                    out = decode( cast );
+                } finally
+                {
+                    cast.release();
+                }
+            } else
+            {
+                out = msg;
+            }
+        } catch ( DecoderException e )
+        {
+            throw e;
+        } catch ( Exception e )
+        {
+            throw new DecoderException( e );
+        } finally
+        {
+            if ( out != null )
+            {
+                ctx.fireChannelRead( out );
             }
         }
     }

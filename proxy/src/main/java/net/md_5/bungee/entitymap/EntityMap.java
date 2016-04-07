@@ -85,7 +85,7 @@ public abstract class EntityMap
     {
         // Need to rewrite the packet because VarInts are variable length
         int readId = DefinedPacket.readVarInt( packet );
-        int readIdLength = packet.readerIndex() - offset;
+        //int readIdLength = packet.readerIndex() - offset;
         if ( readId == oldId || readId == newId )
         {
             ByteBuf data = packet.copy();
@@ -112,5 +112,19 @@ public abstract class EntityMap
             rewriteVarInt( packet, oldId, newId, readerIndex + packetIdLength );
         }
         packet.readerIndex( readerIndex );
+    }
+
+    protected abstract boolean isRewriteServerbound0(int packetId);
+
+    protected abstract boolean isRewriteClientbound0(int packetId);
+
+    public final boolean isRewriteServerbound(int packetId)
+    {
+        return ( serverboundInts[ packetId ] || serverboundVarInts[ packetId ] ) || isRewriteServerbound0( packetId );
+    }
+
+    public final boolean isRewriteClientbound(int packetId)
+    {
+        return ( clientboundInts[ packetId ] || clientboundVarInts[ packetId ] ) || isRewriteClientbound0( packetId );
     }
 }

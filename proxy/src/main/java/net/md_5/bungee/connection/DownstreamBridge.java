@@ -1,5 +1,7 @@
 package net.md_5.bungee.connection;
 
+import io.netty.buffer.SlicedByteBuf;
+
 import com.google.common.base.Objects;
 import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
@@ -98,8 +100,18 @@ public class DownstreamBridge extends PacketHandler
     @Override
     public void handle(PacketWrapper packet) throws Exception
     {
-        con.getEntityRewrite().rewriteClientbound( packet.buf, con.getServerEntityId(), con.getClientEntityId() );
+        // if we get a SlicedByteBuf we know that entity rewrite is not needed - see MinecraftDecoder
+        if ( !( packet.buf instanceof SlicedByteBuf ) )
+        {
+            con.getEntityRewrite().rewriteClientbound( packet.buf, con.getServerEntityId(), con.getClientEntityId() );
+        }
         con.sendPacket( packet );
+    }
+
+    @Override
+    public boolean isEntityRewritePossiblyNeeded(int packetId)
+    {
+        return con.getEntityRewrite().isRewriteClientbound( packetId );
     }
 
     @Override
