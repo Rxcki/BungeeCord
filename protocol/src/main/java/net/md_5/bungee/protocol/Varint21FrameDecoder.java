@@ -16,6 +16,10 @@ public class Varint21FrameDecoder extends ByteToMessageDecoder
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception
     {
+        if ( !in.hasMemoryAddress() )
+        {
+            new Throwable( "A ByteBuf without a memory address was used: " + in ).printStackTrace();
+        }
         in.markReaderIndex();
 
         final byte[] buf = new byte[ 3 ];
