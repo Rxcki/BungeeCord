@@ -107,8 +107,10 @@ public class DownstreamBridge extends PacketHandler
     @Override
     public void handle(KeepAlive alive) throws Exception
     {
-        server.setSentPingId( alive.getRandomId() );
-        con.setSentPingTime( System.currentTimeMillis() );
+        if (server.getSentKeepAlives().getFirst().getMillis() + bungee.getConfig().getTimeout() < System.currentTimeMillis()) {
+            throw new IllegalStateException("Did not recieve keepalive in time from " + con.getName());
+        }
+        server.getSentKeepAlives().addLast( new ServerConnection.KeepAliveInfo( alive.getRandomId() ) );
     }
 
     @Override
@@ -167,7 +169,7 @@ public class DownstreamBridge extends PacketHandler
     {
         Scoreboard serverScoreboard = con.getServerSentScoreboard();
         serverScoreboard.setName( displayScoreboard.getName() );
-        serverScoreboard.setPosition( Position.values()[displayScoreboard.getPosition()] );
+        serverScoreboard.setPosition( Position.values()[ displayScoreboard.getPosition() ] );
     }
 
     @Override

@@ -50,13 +50,11 @@ import net.md_5.bungee.protocol.MinecraftDecoder;
 import net.md_5.bungee.protocol.MinecraftEncoder;
 import net.md_5.bungee.protocol.PacketWrapper;
 import net.md_5.bungee.protocol.Protocol;
-import net.md_5.bungee.protocol.ProtocolConstants;
 import net.md_5.bungee.protocol.packet.Chat;
 import net.md_5.bungee.protocol.packet.ClientSettings;
 import net.md_5.bungee.protocol.packet.Kick;
 import net.md_5.bungee.protocol.packet.PlayerListHeaderFooter;
 import net.md_5.bungee.protocol.packet.PluginMessage;
-import net.md_5.bungee.protocol.packet.Respawn;
 import net.md_5.bungee.protocol.packet.SetCompression;
 import net.md_5.bungee.tab.ServerUnique;
 import net.md_5.bungee.tab.TabList;
@@ -90,9 +88,6 @@ public final class UserConnection implements ProxiedPlayer
     @Getter
     private final Collection<ServerInfo> pendingConnects = new HashSet<>();
     /*========================================================================*/
-    @Getter
-    @Setter
-    private long sentPingTime;
     @Getter
     @Setter
     private int ping = 100;

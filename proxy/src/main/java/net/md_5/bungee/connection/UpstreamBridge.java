@@ -5,6 +5,7 @@ import io.netty.channel.Channel;
 import java.util.ArrayList;
 import java.util.List;
 import net.md_5.bungee.BungeeCord;
+import net.md_5.bungee.ServerConnection;
 import net.md_5.bungee.UserConnection;
 import net.md_5.bungee.Util;
 import net.md_5.bungee.api.ProxyServer;
@@ -117,9 +118,11 @@ public class UpstreamBridge extends PacketHandler
     @Override
     public void handle(KeepAlive alive) throws Exception
     {
-        if ( alive.getRandomId() == con.getServer().getSentPingId() )
+        ServerConnection.KeepAliveInfo keepAliveInfo = con.getServer().getSentKeepAlives().getFirst();
+        if ( keepAliveInfo != null && alive.getRandomId() == keepAliveInfo.getId() )
         {
-            int newPing = (int) ( System.currentTimeMillis() - con.getSentPingTime() );
+            con.getServer().getSentKeepAlives().removeFirst(); // remove already peeked keepAliveInfo from queue since we recieved correct one
+            int newPing = (int) ( System.currentTimeMillis() - keepAliveInfo.getMillis() );
             con.getTabListHandler().onPingChange( newPing );
             con.setPing( newPing );
         } else

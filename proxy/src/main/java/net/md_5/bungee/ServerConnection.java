@@ -2,7 +2,8 @@ package net.md_5.bungee;
 
 import com.google.common.base.Preconditions;
 import java.net.InetSocketAddress;
-import java.util.concurrent.TimeUnit;
+import java.util.LinkedList;
+import lombok.Data;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -25,9 +26,11 @@ public class ServerConnection implements Server
     private boolean isObsolete;
     @Getter
     private final boolean forgeServer = false;
+    /**
+     * Add sent keepalives at the end, so the oldest keep alive expected to be recieved next is at the start
+     */
     @Getter
-    @Setter
-    private long sentPingId = -1;
+    private final LinkedList<KeepAliveInfo> sentKeepAlives = new LinkedList<>();
 
     private final Unsafe unsafe = new Unsafe()
     {
@@ -80,5 +83,12 @@ public class ServerConnection implements Server
     public Unsafe unsafe()
     {
         return unsafe;
+    }
+
+    @Data
+    public static class KeepAliveInfo
+    {
+        private final long id;
+        private final long millis = System.currentTimeMillis();
     }
 }
