@@ -61,7 +61,7 @@ public class DownstreamBridge extends PacketHandler
         }
 
         ServerInfo def = con.updateAndGetNextServer( server.getInfo() );
-        if ( def != null )
+        if ( def != null && !( t instanceof KeepaliveTimeoutException ) )
         {
             server.setObsolete( true );
             con.connectNow( def, ServerConnectEvent.Reason.SERVER_DOWN_REDIRECT );
@@ -107,8 +107,9 @@ public class DownstreamBridge extends PacketHandler
     @Override
     public void handle(KeepAlive alive) throws Exception
     {
-        if (server.getSentKeepAlives().getFirst().getMillis() + bungee.getConfig().getTimeout() < System.currentTimeMillis()) {
-            throw new IllegalStateException("Did not recieve keepalive in time from " + con.getName());
+        if ( server.getSentKeepAlives().getFirst().getMillis() + bungee.getConfig().getTimeout() < System.currentTimeMillis() )
+        {
+            throw new KeepaliveTimeoutException( "Did not recieve keepalive in time from " + con );
         }
         server.getSentKeepAlives().addLast( new ServerConnection.KeepAliveInfo( alive.getRandomId() ) );
     }
@@ -514,5 +515,13 @@ public class DownstreamBridge extends PacketHandler
     public String toString()
     {
         return "[" + con.getName() + "] <-> DownstreamBridge <-> [" + server.getInfo().getName() + "]";
+    }
+
+    private static class KeepaliveTimeoutException extends Exception
+    {
+        public KeepaliveTimeoutException(String s)
+        {
+            super( s );
+        }
     }
 }
