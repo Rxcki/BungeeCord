@@ -121,12 +121,14 @@ public class UpstreamBridge extends PacketHandler
         ServerConnection.KeepAliveInfo keepAliveInfo = con.getServer().getSentKeepAlives().getFirst();
         if ( keepAliveInfo != null && alive.getRandomId() == keepAliveInfo.getId() )
         {
+            bungee.getLogger().info( "[" + con + "] recieved keepalive " + alive.getRandomId() ); //TODO remove debug
             con.getServer().getSentKeepAlives().removeFirst(); // remove already peeked keepAliveInfo from queue since we recieved correct one
             int newPing = (int) ( System.currentTimeMillis() - keepAliveInfo.getMillis() );
             con.getTabListHandler().onPingChange( newPing );
             con.setPing( newPing );
         } else
         {
+            bungee.getLogger().info( "[" + con + "] cancelled keepalive " + alive.getRandomId() ); //TODO remove debug
             // just cancelling and not throwing exception for false ping id becasuse the ping might be sent from the
             // server the player was previously on and didn't answered yet
             throw CancelSendSignal.INSTANCE;

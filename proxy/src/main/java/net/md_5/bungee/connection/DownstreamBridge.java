@@ -118,6 +118,7 @@ public class DownstreamBridge extends PacketHandler
         {
             throw new KeepaliveTimeoutException( "Did not recieve keepalive in time from " + con );
         }
+        bungee.getLogger().info( "[" + con + "] Server sent keepalive " + alive.getRandomId() ); //TODO remove debug
         server.getSentKeepAlives().addLast( new ServerConnection.KeepAliveInfo( alive.getRandomId(), millis ) );
     }
 
