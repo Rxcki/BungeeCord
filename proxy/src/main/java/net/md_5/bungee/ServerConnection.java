@@ -89,6 +89,6 @@ public class ServerConnection implements Server
     public static class KeepAliveInfo
     {
         private final long id;
-        private final long millis = System.currentTimeMillis();
+        private final long millis;
     }
 }

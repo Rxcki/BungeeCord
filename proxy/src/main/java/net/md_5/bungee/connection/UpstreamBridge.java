@@ -127,6 +127,8 @@ public class UpstreamBridge extends PacketHandler
             con.setPing( newPing );
         } else
         {
+            // just cancelling and not throwing exception for false ping id becasuse the ping might be sent from the
+            // server the player was previously on and didn't answered yet
             throw CancelSendSignal.INSTANCE;
         }
     }

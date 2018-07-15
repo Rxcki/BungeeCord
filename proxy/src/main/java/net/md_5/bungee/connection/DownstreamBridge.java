@@ -107,11 +107,18 @@ public class DownstreamBridge extends PacketHandler
     @Override
     public void handle(KeepAlive alive) throws Exception
     {
-        if ( server.getSentKeepAlives().getFirst().getMillis() + bungee.getConfig().getTimeout() < System.currentTimeMillis() )
+        // Attack vector: Client not answering pings sent from server causing sentKeepAlives to overflow
+        // Mitigation: If a new keepalive should be stored, check if the oldest stored keepalive is not older than timeout
+        // Assumption: Server is not malicious, not excessively spamming keepalives or suddenly stopping to send keepalives
+        // Worst case: Keepalives sent from the server in configured timeout time stay in ram forever
+        // (server not sending any keepalive after that, client malicious and not answering keepalives)
+        // Not meant for checking the actual connection timeout
+        final long millis = System.currentTimeMillis();
+        if ( server.getSentKeepAlives().getFirst().getMillis() + bungee.getConfig().getTimeout() < millis )
         {
             throw new KeepaliveTimeoutException( "Did not recieve keepalive in time from " + con );
         }
-        server.getSentKeepAlives().addLast( new ServerConnection.KeepAliveInfo( alive.getRandomId() ) );
+        server.getSentKeepAlives().addLast( new ServerConnection.KeepAliveInfo( alive.getRandomId(), millis ) );
     }
 
     @Override
