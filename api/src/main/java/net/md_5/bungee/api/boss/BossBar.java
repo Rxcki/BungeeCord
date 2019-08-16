@@ -1,8 +1,6 @@
 package net.md_5.bungee.api.boss;
 
 import java.util.Collection;
-import java.util.EnumSet;
-
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 
@@ -41,7 +39,7 @@ public interface BossBar
 
     void setVisible(boolean visible);
 
-    EnumSet<BossBarFlag> getFlags();
+    Collection<BossBarFlag> getFlags();
 
     void addFlags(BossBarFlag... flags);
 

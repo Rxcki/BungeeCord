@@ -53,6 +53,9 @@ import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.ReconnectHandler;
 import net.md_5.bungee.api.ServerPing;
 import net.md_5.bungee.api.Title;
+import net.md_5.bungee.api.boss.BossBar;
+import net.md_5.bungee.api.boss.BossBarColor;
+import net.md_5.bungee.api.boss.BossBarDivision;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.KeybindComponent;
 import net.md_5.bungee.api.chat.ScoreComponent;
@@ -737,5 +740,15 @@ public class BungeeCord extends ProxyServer
     public Title createTitle()
     {
         return new BungeeTitle();
+    }
+
+    @Override
+    public BossBar createBossBar(BaseComponent[] title, BossBarColor color, BossBarDivision division, float health)
+    {
+        Preconditions.checkNotNull( title, "title" );
+        Preconditions.checkNotNull( color, "color" );
+        Preconditions.checkNotNull( division, "division" );
+        Preconditions.checkArgument( health < 1 && health > 0, "Health must not be under 0 and after 1" );
+        return new BungeeBossBar( title, color, division, health );
     }
 }
