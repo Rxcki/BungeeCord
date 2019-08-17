@@ -105,6 +105,7 @@ public class BungeeBossBar implements net.md_5.bungee.api.boss.BossBar
     public void removeAllPlayers()
     {
         removePlayers( players );
+        players.clear();
     }
 
     @Override
