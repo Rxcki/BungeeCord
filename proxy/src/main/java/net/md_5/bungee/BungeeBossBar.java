@@ -43,6 +43,22 @@ public class BungeeBossBar implements net.md_5.bungee.api.boss.BossBar
     @ToString.Exclude
     private final UUID uuid = UUID.randomUUID();
 
+    @ToString.Exclude
+    private final BossBar addPacket = new BossBar( uuid, 0 );
+    @ToString.Exclude
+    private final BossBar removePacket = new BossBar( uuid, 1 );
+    @ToString.Exclude
+    private final BossBar healthUpdatePacket = new BossBar( uuid, 2 );
+    @ToString.Exclude
+    private final BossBar titleUpdatePacket = new BossBar( uuid, 3 );
+    @ToString.Exclude
+    private final BossBar styleUpdatePacket = new BossBar( uuid, 4 );
+    @ToString.Exclude
+    private final BossBar flagUpdatePacket = new BossBar( uuid, 5 );
+
+
+
+
     public BungeeBossBar(BaseComponent[] title, BossBarColor color, BossBarDivision division, float health)
     {
         setTitle( title );
@@ -57,7 +73,7 @@ public class BungeeBossBar implements net.md_5.bungee.api.boss.BossBar
         Preconditions.checkNotNull( player, "player" );
         if ( players.add( player ) && visible ) // order is important
         {
-            sendPacket( player, createAddPacket() );
+            sendPacket( player, addPacket() );
         }
     }
 
@@ -77,7 +93,7 @@ public class BungeeBossBar implements net.md_5.bungee.api.boss.BossBar
         Preconditions.checkNotNull( player, "player" );
         if ( players.remove( player ) && visible ) // order is important
         {
-            sendPacket( player, createRemovePacket() );
+            sendPacket( player, removePacket() );
         }
     }
 
@@ -94,7 +110,7 @@ public class BungeeBossBar implements net.md_5.bungee.api.boss.BossBar
     @Override
     public void removeAllPlayers()
     {
-        sendToAffected( createRemovePacket() );
+        sendToAffected( removePacket() );
         players.clear();
     }
 
@@ -110,7 +126,7 @@ public class BungeeBossBar implements net.md_5.bungee.api.boss.BossBar
         this.title = Preconditions.checkNotNull( title, "title" );
         if ( visible )
         {
-            sendToAffected( createTitleUpdatePacket() );
+            sendToAffected( titleUpdatePacket() );
         }
     }
 
@@ -122,7 +138,7 @@ public class BungeeBossBar implements net.md_5.bungee.api.boss.BossBar
         this.health = health;
         if ( prevHealth != health && visible )
         {
-            sendToAffected( createHealthUpdatePacket() );
+            sendToAffected( healthUpdatePacket() );
         }
     }
 
@@ -133,7 +149,7 @@ public class BungeeBossBar implements net.md_5.bungee.api.boss.BossBar
         this.color = Preconditions.checkNotNull( color, "color" );
         if ( prevColor != color && visible )
         {
-            sendToAffected( createStyleUpdatePacket() );
+            sendToAffected( styleUpdatePacket() );
         }
     }
 
@@ -144,7 +160,7 @@ public class BungeeBossBar implements net.md_5.bungee.api.boss.BossBar
         this.division = Preconditions.checkNotNull( division, "division" );
         if ( prevDivision != division && visible )
         {
-            sendToAffected( createStyleUpdatePacket() );
+            sendToAffected( styleUpdatePacket() );
         }
     }
 
@@ -154,10 +170,10 @@ public class BungeeBossBar implements net.md_5.bungee.api.boss.BossBar
         boolean previous = this.visible;
         if ( previous && !visible )
         {
-            sendToAffected( createRemovePacket() );
+            sendToAffected( removePacket() );
         } else if ( !previous && visible )
         {
-            sendToAffected( createAddPacket() );
+            sendToAffected( addPacket() );
         }
         this.visible = visible;
     }
@@ -175,7 +191,7 @@ public class BungeeBossBar implements net.md_5.bungee.api.boss.BossBar
         {
             if ( visible )
             {
-                sendToAffected( createFlagUpdatePacket() );
+                sendToAffected( flagUpdatePacket() );
             }
             return true;
         }
@@ -187,7 +203,7 @@ public class BungeeBossBar implements net.md_5.bungee.api.boss.BossBar
     {
         if ( this.flags.addAll( Arrays.asList( flags ) ) && visible )
         {
-            sendToAffected( createFlagUpdatePacket() );
+            sendToAffected( flagUpdatePacket() );
         }
     }
 
@@ -198,7 +214,7 @@ public class BungeeBossBar implements net.md_5.bungee.api.boss.BossBar
         {
             if ( this.visible )
             {
-                sendToAffected( createFlagUpdatePacket() );
+                sendToAffected( flagUpdatePacket() );
             }
             return true;
         }
@@ -210,7 +226,7 @@ public class BungeeBossBar implements net.md_5.bungee.api.boss.BossBar
     {
         if ( this.flags.removeAll( Arrays.asList( flags ) ) && visible )
         {
-            sendToAffected( createFlagUpdatePacket() );
+            sendToAffected( flagUpdatePacket() );
         }
     }
 
@@ -238,49 +254,44 @@ public class BungeeBossBar implements net.md_5.bungee.api.boss.BossBar
         return flagMask;
     }
 
-    private BossBar createAddPacket()
+    private BossBar addPacket()
     {
-        BossBar packet = new BossBar( uuid, 0 );
-        packet.setTitle( ComponentSerializer.toString( title ) );
-        packet.setColor( color.ordinal() );
-        packet.setDivision( division.ordinal() );
-        packet.setHealth( health );
-        packet.setFlags( serializeFlags() );
-        return packet;
+        addPacket.setTitle( ComponentSerializer.toString( title ) );
+        addPacket.setColor( color.ordinal() );
+        addPacket.setDivision( division.ordinal() );
+        addPacket.setHealth( health );
+        addPacket.setFlags( serializeFlags() );
+        return addPacket;
     }
 
-    private BossBar createRemovePacket()
+    private BossBar removePacket()
     {
-        return new BossBar( uuid, 1 );
+        return removePacket;
     }
 
-    private BossBar createHealthUpdatePacket()
+    private BossBar healthUpdatePacket()
     {
-        BossBar packet = new BossBar( uuid, 2 );
-        packet.setHealth( this.health );
-        return packet;
+        healthUpdatePacket.setHealth( health );
+        return healthUpdatePacket;
     }
 
-    private BossBar createTitleUpdatePacket()
+    private BossBar titleUpdatePacket()
     {
-        BossBar packet = new BossBar( uuid, 3 );
-        packet.setTitle( ComponentSerializer.toString( this.title ) );
-        return packet;
+        titleUpdatePacket.setTitle( ComponentSerializer.toString( title ) );
+        return titleUpdatePacket;
     }
 
-    private BossBar createStyleUpdatePacket()
+    private BossBar styleUpdatePacket()
     {
-        BossBar packet = new BossBar( uuid, 4 );
-        packet.setColor( color.ordinal() );
-        packet.setDivision( division.ordinal() );
-        return packet;
+        styleUpdatePacket.setColor( color.ordinal() );
+        styleUpdatePacket.setDivision( division.ordinal() );
+        return styleUpdatePacket;
     }
 
-    private BossBar createFlagUpdatePacket()
+    private BossBar flagUpdatePacket()
     {
-        BossBar packet = new BossBar( uuid, 5 );
-        packet.setFlags( serializeFlags() );
-        return packet;
+        flagUpdatePacket.setFlags( serializeFlags() );
+        return flagUpdatePacket;
     }
 
     /**
