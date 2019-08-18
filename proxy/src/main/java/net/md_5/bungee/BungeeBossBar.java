@@ -1,14 +1,14 @@
 package net.md_5.bungee;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.UUID;
-
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.Set;
+import java.util.UUID;
+import java.util.WeakHashMap;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -36,40 +36,29 @@ public class BungeeBossBar implements net.md_5.bungee.api.boss.BossBar
     @Getter
     private float health;
     @Getter
-    private boolean visible;
-
-    private List<ProxiedPlayer> players;
-    private EnumSet<BossBarFlag> flags;
+    private boolean visible = false;
+    private final Set<ProxiedPlayer> players = Collections.newSetFromMap( new WeakHashMap<ProxiedPlayer, Boolean>() );
+    private final EnumSet<BossBarFlag> flags = EnumSet.noneOf( BossBarFlag.class );
 
     @ToString.Exclude
-    private UUID uuid;
+    private final UUID uuid = UUID.randomUUID();
 
     public BungeeBossBar(BaseComponent[] title, BossBarColor color, BossBarDivision division, float health)
     {
-        this.title = Preconditions.checkNotNull( title, "title" );
-        this.color = Preconditions.checkNotNull( color, "color" );
-        this.division = Preconditions.checkNotNull( division, "division" );
-        Preconditions.checkArgument( 0 <= health && health <= 1, "Health may not be lower than 0 or greater than 1" );
-        this.health = health;
-        this.visible = true;
-        this.players = new ArrayList<>();
-        this.flags = EnumSet.noneOf( BossBarFlag.class );
-        this.uuid = UUID.randomUUID();
+        setTitle( title );
+        setColor( color );
+        setDivision( division );
+        setHealth( health );
     }
 
     @Override
-    public boolean addPlayer(ProxiedPlayer player)
+    public void addPlayer(ProxiedPlayer player)
     {
         Preconditions.checkNotNull( player, "player" );
-        if ( !players.contains( player ) )
+        if ( players.add( player ) && visible ) // order is important
         {
-            players.add( player );
+            sendPacket( player, createAddPacket() );
         }
-        if ( player.isConnected() && visible )
-        {
-            return sendPacket( player, addPacket() );
-        }
-        return false;
     }
 
     @Override
@@ -83,19 +72,13 @@ public class BungeeBossBar implements net.md_5.bungee.api.boss.BossBar
     }
 
     @Override
-    public boolean removePlayer(ProxiedPlayer player)
+    public void removePlayer(ProxiedPlayer player)
     {
         Preconditions.checkNotNull( player, "player" );
-        if ( !players.contains( player ) )
+        if ( players.remove( player ) && visible ) // order is important
         {
-            return false;
+            sendPacket( player, createRemovePacket() );
         }
-        players.remove( player );
-        if ( player.isConnected() && visible )
-        {
-            return sendPacket( player, removePacket() );
-        }
-        return false;
     }
 
     @Override
@@ -111,7 +94,8 @@ public class BungeeBossBar implements net.md_5.bungee.api.boss.BossBar
     @Override
     public void removeAllPlayers()
     {
-        removePlayers( ImmutableList.copyOf( players ) );
+        sendToAffected( createRemovePacket() );
+        players.clear();
     }
 
     @Override
@@ -126,42 +110,41 @@ public class BungeeBossBar implements net.md_5.bungee.api.boss.BossBar
         this.title = Preconditions.checkNotNull( title, "title" );
         if ( visible )
         {
-            BossBar packet = new BossBar( uuid, 3 );
-            packet.setTitle( ComponentSerializer.toString( title ) );
-            sendToAffected( packet );
+            sendToAffected( createTitleUpdatePacket() );
         }
     }
 
     @Override
     public void setHealth(float health)
     {
-        Preconditions.checkArgument( 0 <= health && health <= 1, "Health may not be lower than 0 or greater than 1" );
+        Preconditions.checkArgument( 0 <= health && health <= 1, "health may not be lower than 0 or greater than 1" );
+        float prevHealth = this.health;
         this.health = health;
-        if ( visible )
+        if ( prevHealth != health && visible )
         {
-            BossBar packet = new BossBar( uuid, 2 );
-            packet.setHealth( health );
-            sendToAffected( packet );
+            sendToAffected( createHealthUpdatePacket() );
         }
     }
 
     @Override
     public void setColor(BossBarColor color)
     {
+        BossBarColor prevColor = this.color;
         this.color = Preconditions.checkNotNull( color, "color" );
-        if ( visible )
+        if ( prevColor != color && visible )
         {
-            setDivisions( color, division );
+            sendToAffected( createStyleUpdatePacket() );
         }
     }
 
     @Override
     public void setDivision(BossBarDivision division)
     {
+        final BossBarDivision prevDivision = this.division;
         this.division = Preconditions.checkNotNull( division, "division" );
-        if ( visible )
+        if ( prevDivision != division && visible )
         {
-            setDivisions( color, division );
+            sendToAffected( createStyleUpdatePacket() );
         }
     }
 
@@ -171,10 +154,10 @@ public class BungeeBossBar implements net.md_5.bungee.api.boss.BossBar
         boolean previous = this.visible;
         if ( previous && !visible )
         {
-            sendToAffected( removePacket() );
+            sendToAffected( createRemovePacket() );
         } else if ( !previous && visible )
         {
-            sendToAffected( addPacket() );
+            sendToAffected( createAddPacket() );
         }
         this.visible = visible;
     }
@@ -186,21 +169,40 @@ public class BungeeBossBar implements net.md_5.bungee.api.boss.BossBar
     }
 
     @Override
+    public boolean addFlag(BossBarFlag flag)
+    {
+        if ( this.flags.add( flag ) )
+        {
+            if ( visible )
+            {
+                sendToAffected( createFlagUpdatePacket() );
+            }
+            return true;
+        }
+        return false;
+    }
+
+    @Override
     public void addFlags(BossBarFlag... flags)
     {
         if ( this.flags.addAll( Arrays.asList( flags ) ) && visible )
         {
-            sendToAffected( updateFlags() );
+            sendToAffected( createFlagUpdatePacket() );
         }
     }
 
     @Override
-    public void removeFlag(BossBarFlag flag)
+    public boolean removeFlag(BossBarFlag flag)
     {
-        if ( flags.remove( flag ) && visible )
+        if ( this.flags.remove( flag ) )
         {
-            sendToAffected( updateFlags() );
+            if ( this.visible )
+            {
+                sendToAffected( createFlagUpdatePacket() );
+            }
+            return true;
         }
+        return false;
     }
 
     @Override
@@ -208,8 +210,14 @@ public class BungeeBossBar implements net.md_5.bungee.api.boss.BossBar
     {
         if ( this.flags.removeAll( Arrays.asList( flags ) ) && visible )
         {
-            sendToAffected( updateFlags() );
+            sendToAffected( createFlagUpdatePacket() );
         }
+    }
+
+    @Override
+    public boolean canSeeBossbars(ProxiedPlayer player)
+    {
+        return player.getPendingConnection().getVersion() >= ProtocolConstants.MINECRAFT_1_9;
     }
 
     private byte serializeFlags()
@@ -230,22 +238,7 @@ public class BungeeBossBar implements net.md_5.bungee.api.boss.BossBar
         return flagMask;
     }
 
-    private void setDivisions(BossBarColor color, BossBarDivision division)
-    {
-        BossBar packet = new BossBar( uuid, 4 );
-        packet.setColor( color.ordinal() );
-        packet.setDivision( division.ordinal() );
-        sendToAffected( packet );
-    }
-
-    private BossBar updateFlags()
-    {
-        BossBar packet = new BossBar( uuid, 5 );
-        packet.setFlags( serializeFlags() );
-        return packet;
-    }
-
-    private BossBar addPacket()
+    private BossBar createAddPacket()
     {
         BossBar packet = new BossBar( uuid, 0 );
         packet.setTitle( ComponentSerializer.toString( title ) );
@@ -256,29 +249,64 @@ public class BungeeBossBar implements net.md_5.bungee.api.boss.BossBar
         return packet;
     }
 
+    private BossBar createRemovePacket()
+    {
+        return new BossBar( uuid, 1 );
+    }
+
+    private BossBar createHealthUpdatePacket()
+    {
+        BossBar packet = new BossBar( uuid, 2 );
+        packet.setHealth( this.health );
+        return packet;
+    }
+
+    private BossBar createTitleUpdatePacket()
+    {
+        BossBar packet = new BossBar( uuid, 3 );
+        packet.setTitle( ComponentSerializer.toString( this.title ) );
+        return packet;
+    }
+
+    private BossBar createStyleUpdatePacket()
+    {
+        BossBar packet = new BossBar( uuid, 4 );
+        packet.setColor( color.ordinal() );
+        packet.setDivision( division.ordinal() );
+        return packet;
+    }
+
+    private BossBar createFlagUpdatePacket()
+    {
+        BossBar packet = new BossBar( uuid, 5 );
+        packet.setFlags( serializeFlags() );
+        return packet;
+    }
+
+    /**
+     * Sends packet to all added players if connected
+     *
+     * @param packet packet to send
+     */
     private void sendToAffected(DefinedPacket packet)
     {
         for ( ProxiedPlayer player : players )
         {
-            if ( player.isConnected() && visible )
-            {
-                sendPacket( player, packet );
-            }
+            sendPacket( player, packet );
         }
     }
 
-    private boolean sendPacket(ProxiedPlayer player, DefinedPacket packet)
+    /**
+     * Send packet if player connected
+     *
+     * @param player player
+     * @param packet packet
+     */
+    private void sendPacket(ProxiedPlayer player, DefinedPacket packet)
     {
-        if ( player.getPendingConnection().getVersion() >= ProtocolConstants.MINECRAFT_1_9 )
+        if ( canSeeBossbars( player ) && player.isConnected() )
         {
             player.unsafe().sendPacket( packet );
-            return true;
         }
-        return false;
-    }
-
-    private BossBar removePacket()
-    {
-        return new BossBar( uuid, 1 );
     }
 }

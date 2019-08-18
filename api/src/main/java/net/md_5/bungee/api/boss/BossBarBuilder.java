@@ -1,9 +1,13 @@
 package net.md_5.bungee.api.boss;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
 import com.google.common.base.Preconditions;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.WeakHashMap;
+import lombok.Getter;
+import lombok.experimental.Accessors;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
@@ -12,6 +16,8 @@ import net.md_5.bungee.api.connection.ProxiedPlayer;
 /**
  * Represents a builder of {@link BossBar}
  */
+@Getter
+@Accessors(fluent = true)
 public final class BossBarBuilder
 {
 
@@ -19,7 +25,7 @@ public final class BossBarBuilder
     private BossBarColor color;
     private BossBarDivision division;
     private float health;
-    private Collection<ProxiedPlayer> players;
+    private Set<ProxiedPlayer> players;
     private BossBarFlag[] flags;
 
     /**
@@ -27,7 +33,22 @@ public final class BossBarBuilder
      */
     public BossBarBuilder()
     {
-        initDefault();
+        this( new ComponentBuilder( "Title not specified" ).create() );
+    }
+
+    /**
+     * Creates a boss bar builder with the specified title
+     *
+     * @param title the boss bar title you wish to create a boss bar builder with
+     */
+    public BossBarBuilder(BaseComponent[] title)
+    {
+        this.title(title);
+        color = BossBarColor.PINK;
+        division = BossBarDivision.SOLID;
+        health = 1.0f;
+        players = Collections.newSetFromMap( new WeakHashMap<ProxiedPlayer, Boolean>() );
+        flags = new BossBarFlag[ 0 ];
     }
 
     /**
@@ -38,17 +59,12 @@ public final class BossBarBuilder
      */
     public BossBarBuilder(BossBarBuilder original)
     {
-        initCopy( original );
-    }
-
-    /**
-     * Creates a boss bar builder with the specified title
-     *
-     * @param title the boss bar title you wish to create a boss bar builder with
-     */
-    public BossBarBuilder(BaseComponent[] title)
-    {
-        initTitle( title );
+        this.title = original.title;
+        this.color = original.color;
+        this.division = original.division;
+        this.health = original.health;
+        this.players = original.players;
+        this.flags = original.flags;
     }
 
     /**
@@ -59,8 +75,7 @@ public final class BossBarBuilder
      */
     public BossBarBuilder title(BaseComponent[] title)
     {
-        Preconditions.checkNotNull( title, "title" );
-        this.title = title;
+        this.title = Preconditions.checkNotNull( title, "title" );
         return this;
     }
 
@@ -72,7 +87,7 @@ public final class BossBarBuilder
      */
     public BossBarBuilder color(BossBarColor color)
     {
-        this.color = color;
+        this.color = Preconditions.checkNotNull( color, "color" );
         return this;
     }
 
@@ -84,7 +99,7 @@ public final class BossBarBuilder
      */
     public BossBarBuilder division(BossBarDivision division)
     {
-        this.division = division;
+        this.division = Preconditions.checkNotNull( division, "division" );
         return this;
     }
 
@@ -97,6 +112,7 @@ public final class BossBarBuilder
      */
     public BossBarBuilder health(float health)
     {
+        Preconditions.checkArgument( 0 <= health && health <= 1, "health may not be lower than 0 or greater than 1" );
         this.health = health;
         return this;
     }
@@ -135,6 +151,7 @@ public final class BossBarBuilder
      */
     public BossBarBuilder players(Iterable<ProxiedPlayer> players)
     {
+        Preconditions.checkNotNull( players, "players" );
         for ( ProxiedPlayer player : players )
         {
             player( player );
@@ -143,14 +160,14 @@ public final class BossBarBuilder
     }
 
     /**
-     * Adds the specified flag(s) to the boss bar.
+     * Sets the flag(s) of the boss bar.
      *
      * @param flags the flag(s) you wish to add
      * @return this BossBarBuilder for chaining
      */
     public BossBarBuilder flags(BossBarFlag... flags)
     {
-        this.flags = flags;
+        this.flags = Preconditions.checkNotNull( flags, "flags" );;
         return this;
     }
 
@@ -162,42 +179,14 @@ public final class BossBarBuilder
     public BossBar build()
     {
         BossBar bossBar = ProxyServer.getInstance().createBossBar( title, color, division, health );
-        if ( flags.length != 0 )
+        if ( flags.length > 0 )
         {
             bossBar.addFlags( flags );
         }
-        if ( players.size() != 0 )
+        if ( !players.isEmpty() )
         {
             bossBar.addPlayers( players );
         }
         return bossBar;
     }
-
-    //
-    private void initDefault()
-    {
-        this.title = new ComponentBuilder( "Title not specified" ).create();
-        color = BossBarColor.PINK;
-        division = BossBarDivision.SOLID;
-        health = 1.0f;
-        players = new ArrayList<>();
-        flags = new BossBarFlag[0];
-    }
-
-    private void initTitle(BaseComponent[] title)
-    {
-        initDefault();
-        this.title = title;
-    }
-
-    private void initCopy(BossBarBuilder builder)
-    {
-        this.title = builder.title;
-        this.color = builder.color;
-        this.division = builder.division;
-        this.health = builder.health;
-        this.players = builder.players;
-        this.flags = builder.flags;
-    }
-    //
 }

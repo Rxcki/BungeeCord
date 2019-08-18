@@ -13,32 +13,30 @@ public interface BossBar
     /**
      * Adds a player to view the boss bar. If the player is not connected or
      * the boss bar is not visible, it will not be sent.
-     * 
+     *
      * @param player the player you wish to see the boss bar
-     * @return success state
      */
-    boolean addPlayer(ProxiedPlayer player);
+    void addPlayer(ProxiedPlayer player);
 
     /**
-     * Adds all players to view the boss bar.
-     * 
+     * Adds all given players to view the boss bar.
+     *
      * @param players the players you wish to see the boss bar
-     * @see #addPlayer(ProxiedPlayer) 
+     * @see #addPlayer(ProxiedPlayer)
      */
     void addPlayers(Iterable<ProxiedPlayer> players);
 
     /**
-     * Removes the specified player from viewing the boss bar. If the player is not 
+     * Removes the specified player from viewing the boss bar. If the player is not
      * connected or the boss bar is not viewable the removal packet won't be sent.
-     * 
+     *
      * @param player the player you wish to remove from the boss bar
-     * @return success state
      */
-    boolean removePlayer(ProxiedPlayer player);
+    void removePlayer(ProxiedPlayer player);
 
     /**
      * Removes all specified players from viewing the boss bar.
-     * 
+     *
      * @param players the players you wish to remove from the boss bar
      * @see #removePlayer(ProxiedPlayer)
      */
@@ -114,7 +112,7 @@ public interface BossBar
     void setDivision(BossBarDivision division);
 
     /**
-     * Returns whenever the boss bar is visible. By default it will return <code>true</code>
+     * Returns whenever the boss bar is visible. By default the bossbar is not visible, and <code>false</code> is returned
      *
      * @return <code>true</code> if visible, <code>false</code> otherwise
      */
@@ -136,6 +134,14 @@ public interface BossBar
     Collection<BossBarFlag> getFlags();
 
     /**
+     * Adds a flag to the boss bar
+     *
+     * @param flag the flag you wish to add
+     * @return if the was was not present before
+     */
+    boolean addFlag(BossBarFlag flag);
+
+    /**
      * Adds flag(s) to the boss bar
      *
      * @param flags the flag(s) you wish to add
@@ -146,8 +152,9 @@ public interface BossBar
      * Removes flag from the boss bar
      *
      * @param flag the flag you wish to remove
+     * @return if the flag was present
      */
-    void removeFlag(BossBarFlag flag);
+    boolean removeFlag(BossBarFlag flag);
 
     /**
      * Removes flag(s) from the boss bar
@@ -156,4 +163,11 @@ public interface BossBar
      */
     void removeFlags(BossBarFlag... flags);
 
+    /**
+     * Returns whether the player's minecraft version is suited to see boss bars (Minecraft 1.9 or greater)
+     *
+     * @param player player to check
+     * @return whether the player can see boss bars
+     */
+    boolean canSeeBossbars(ProxiedPlayer player);
 }
