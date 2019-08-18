@@ -66,7 +66,7 @@ public class BungeeBossBar implements net.md_5.bungee.api.boss.BossBar
         }
         if ( player.isConnected() && visible )
         {
-            player.unsafe().sendPacket( addPacket() );
+            sendPacket( player, addPacket() );
         }
     }
 
@@ -87,7 +87,7 @@ public class BungeeBossBar implements net.md_5.bungee.api.boss.BossBar
         players.remove( player );
         if ( player.isConnected() && visible )
         {
-            player.unsafe().sendPacket( removePacket() );
+            sendPacket( player, removePacket() );
         }
     }
 
