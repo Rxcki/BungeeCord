@@ -15,8 +15,9 @@ public interface BossBar
      * the boss bar is not visible, it will not be sent.
      * 
      * @param player the player you wish to see the boss bar
+     * @return success state
      */
-    void addPlayer(ProxiedPlayer player);
+    boolean addPlayer(ProxiedPlayer player);
 
     /**
      * Adds all players to view the boss bar.
@@ -31,8 +32,9 @@ public interface BossBar
      * connected or the boss bar is not viewable the removal packet won't be sent.
      * 
      * @param player the player you wish to remove from the boss bar
+     * @return success state
      */
-    void removePlayer(ProxiedPlayer player);
+    boolean removePlayer(ProxiedPlayer player);
 
     /**
      * Removes all specified players from viewing the boss bar.

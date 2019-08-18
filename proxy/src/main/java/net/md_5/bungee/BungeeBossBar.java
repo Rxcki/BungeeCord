@@ -57,7 +57,7 @@ public class BungeeBossBar implements net.md_5.bungee.api.boss.BossBar
     }
 
     @Override
-    public void addPlayer(ProxiedPlayer player)
+    public boolean addPlayer(ProxiedPlayer player)
     {
         Preconditions.checkNotNull( player, "player" );
         if ( !players.contains( player ) )
@@ -66,8 +66,9 @@ public class BungeeBossBar implements net.md_5.bungee.api.boss.BossBar
         }
         if ( player.isConnected() && visible )
         {
-            sendPacket( player, addPacket() );
+            return sendPacket( player, addPacket() );
         }
+        return false;
     }
 
     @Override
@@ -81,14 +82,19 @@ public class BungeeBossBar implements net.md_5.bungee.api.boss.BossBar
     }
 
     @Override
-    public void removePlayer(ProxiedPlayer player)
+    public boolean removePlayer(ProxiedPlayer player)
     {
         Preconditions.checkNotNull( player, "player" );
+        if ( !players.contains( player ) )
+        {
+            return false;
+        }
         players.remove( player );
         if ( player.isConnected() && visible )
         {
-            sendPacket( player, removePacket() );
+            return sendPacket( player, removePacket() );
         }
+        return false;
     }
 
     @Override
@@ -261,12 +267,14 @@ public class BungeeBossBar implements net.md_5.bungee.api.boss.BossBar
         }
     }
 
-    private void sendPacket(ProxiedPlayer player, DefinedPacket packet)
+    private boolean sendPacket(ProxiedPlayer player, DefinedPacket packet)
     {
         if ( player.getPendingConnection().getVersion() >= ProtocolConstants.MINECRAFT_1_9 )
         {
             player.unsafe().sendPacket( packet );
+            return true;
         }
+        return false;
     }
 
     private BossBar removePacket()
