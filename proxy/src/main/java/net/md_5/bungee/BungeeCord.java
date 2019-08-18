@@ -748,7 +748,7 @@ public class BungeeCord extends ProxyServer
         Preconditions.checkNotNull( title, "title" );
         Preconditions.checkNotNull( color, "color" );
         Preconditions.checkNotNull( division, "division" );
-        Preconditions.checkArgument( health < 1 && health > 0, "Health must not be under 0 and after 1" );
+        Preconditions.checkArgument( 0 <= health && health <= 1, "Health may not be lower than 0 or greater than 1" );
         return new BungeeBossBar( title, color, division, health );
     }
 }
