@@ -745,10 +745,6 @@ public class BungeeCord extends ProxyServer
     @Override
     public BossBar createBossBar(BaseComponent[] title, BossBarColor color, BossBarDivision division, float health)
     {
-        Preconditions.checkNotNull( title, "title" );
-        Preconditions.checkNotNull( color, "color" );
-        Preconditions.checkNotNull( division, "division" );
-        Preconditions.checkArgument( 0 <= health && health <= 1, "Health may not be lower than 0 or greater than 1" );
         return new BungeeBossBar( title, color, division, health );
     }
 }

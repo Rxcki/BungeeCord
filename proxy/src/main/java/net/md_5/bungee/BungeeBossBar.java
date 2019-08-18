@@ -46,9 +46,10 @@ public class BungeeBossBar implements net.md_5.bungee.api.boss.BossBar
 
     public BungeeBossBar(BaseComponent[] title, BossBarColor color, BossBarDivision division, float health)
     {
-        this.title = title;
-        this.color = color;
-        this.division = division;
+        this.title = Preconditions.checkNotNull( title, "title" );
+        this.color = Preconditions.checkNotNull( color, "color" );
+        this.division = Preconditions.checkNotNull( division, "division" );
+        Preconditions.checkArgument( 0 <= health && health <= 1, "Health may not be lower than 0 or greater than 1" );
         this.health = health;
         this.visible = true;
         this.players = new ArrayList<>();
