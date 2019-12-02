@@ -473,7 +473,7 @@ public class BungeeCord extends ProxyServer
      *
      * @param packet the packet to send
      */
-    public void broadcast(DefinedPacket packet)
+    public void broadcast(DefinedPacket<?> packet)
     {
         connectionLock.readLock().lock();
         try

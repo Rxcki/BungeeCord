@@ -331,7 +331,7 @@ public enum Protocol
     {
         for ( int id = 0; id < MAX_PACKET_ID; id++ )
         {
-            DefinedPacket packet = data.createPacket( id, version );
+            DefinedPacket<?> packet = data.createPacket( id, version );
             if ( packet != null )
             {
                 System.out.println( version + " " + data.protocolPhase + " " + data.direction + " " + id + " " + packet.getClass().getSimpleName() );
@@ -392,7 +392,7 @@ public enum Protocol
             return protocol;
         }
 
-        public final DefinedPacket createPacket(int id, int version)
+        public final DefinedPacket<?> createPacket(int id, int version)
         {
             ProtocolData protocolData = getProtocolData( version );
             if ( protocolData == null )

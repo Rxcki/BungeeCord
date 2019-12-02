@@ -32,9 +32,9 @@ import net.md_5.bungee.protocol.packet.PluginMessage;
 
 @RequiredArgsConstructor
 @ToString(of =
-{
-    "name", "address", "restricted"
-})
+        {
+                "name", "address", "restricted"
+        })
 public class BungeeServerInfo implements ServerInfo
 {
 
@@ -48,7 +48,7 @@ public class BungeeServerInfo implements ServerInfo
     @Getter
     private final boolean restricted;
     @Getter
-    private final Queue<DefinedPacket> packetQueue = new LinkedList<>();
+    private final Queue<DefinedPacket<?>> packetQueue = new LinkedList<>();
 
     @Synchronized("players")
     public void addPlayer(ProxiedPlayer player)
@@ -149,7 +149,7 @@ public class BungeeServerInfo implements ServerInfo
         new Bootstrap()
                 .channel( PipelineUtils.getChannel() )
                 .group( BungeeCord.getInstance().eventLoops )
-                .handler( PipelineUtils.BASE )
+                .handler( PipelineUtils.BASE_OTHER )
                 .option( ChannelOption.CONNECT_TIMEOUT_MILLIS, 5000 ) // TODO: Configurable
                 .remoteAddress( getAddress() )
                 .connect()

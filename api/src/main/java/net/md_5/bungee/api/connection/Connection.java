@@ -73,6 +73,6 @@ public interface Connection
          *
          * @param packet the packet to send
          */
-        void sendPacket(DefinedPacket packet);
+        void sendPacket(DefinedPacket<?> packet);
     }
 }

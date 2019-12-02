@@ -75,9 +75,9 @@ public class UpstreamBridge extends PacketHandler
             PlayerListItem.Item item = new PlayerListItem.Item();
             item.setUuid( con.getUniqueId() );
             packet.setItems( new PlayerListItem.Item[]
-            {
-                item
-            } );
+                    {
+                            item
+                    } );
             for ( ProxiedPlayer player : con.getServer().getInfo().getPlayers() )
             {
                 player.unsafe().sendPacket( packet );
@@ -103,38 +103,52 @@ public class UpstreamBridge extends PacketHandler
     }
 
     @Override
-    public boolean shouldHandle(PacketWrapper packet) throws Exception
+    @SuppressWarnings("unchecked")
+    public void handleFully(PacketWrapper<?> packet) throws Exception
     {
-        return con.getServer() != null || packet.packet instanceof PluginMessage;
-    }
-
-    @Override
-    public void handle(PacketWrapper packet) throws Exception
-    {
-        if ( con.getServer() != null )
+        if ( con.getServer() == null && !( packet.packet instanceof PluginMessage ) )
         {
-            con.getEntityRewrite().rewriteServerbound( packet.buf, con.getClientEntityId(), con.getServerEntityId(), con.getPendingConnection().getVersion() );
-            con.getServer().getCh().write( packet );
+            return;
+        }
+        if ( packet.packet != null )
+        {
+            packet.packet.callHandler( this, packet );
+        } else
+        {
+            handleGeneral( packet );
         }
     }
 
     @Override
-    public void handle(KeepAlive alive) throws Exception
+    public void handleGeneral(PacketWrapper<?> packet)
     {
-        if ( alive.getRandomId() == con.getServer().getSentPingId() )
+        con.getEntityRewrite().rewriteServerbound( packet.buf, con.getClientEntityId(), con.getServerEntityId(), con.getPendingConnection().getVersion() );
+        con.getServer().getCh().write( packet );
+    }
+
+    @Override
+    public void handleGeneralNoEntity(PacketWrapper<?> packet)
+    {
+        con.getServer().getCh().write( packet );
+    }
+
+    @Override
+    public void handleKeepAlive(PacketWrapper<KeepAlive> packet) throws Exception
+    {
+        // Don't send KeepAlive from old server to new one
+        if ( packet.packet.getRandomId() == con.getServer().getSentPingId() )
         {
             int newPing = (int) ( System.currentTimeMillis() - con.getSentPingTime() );
             con.getTabListHandler().onPingChange( newPing );
             con.setPing( newPing );
-        } else
-        {
-            throw CancelSendSignal.INSTANCE;
+            handleGeneralNoEntity( packet );
         }
     }
 
     @Override
-    public void handle(Chat chat) throws Exception
+    public void handleChat(PacketWrapper<Chat> packet) throws Exception
     {
+        final Chat chat = packet.packet;
         int maxLength = ( con.getPendingConnection().getVersion() >= ProtocolConstants.MINECRAFT_1_11 ) ? 256 : 100;
         Preconditions.checkArgument( chat.getMessage().length() <= maxLength, "Chat message too long" ); // Mojang limit, check on updates
 
@@ -147,12 +161,13 @@ public class UpstreamBridge extends PacketHandler
                 con.getServer().unsafe().sendPacket( chat );
             }
         }
-        throw CancelSendSignal.INSTANCE;
+        // if should be passed through, possibly modified chat packet is sent above
     }
 
     @Override
-    public void handle(TabCompleteRequest tabComplete) throws Exception
+    public void handleTabCompleteRequest(PacketWrapper<TabCompleteRequest> packet) throws Exception
     {
+        final TabCompleteRequest tabComplete = packet.packet;
         List<String> suggestions = new ArrayList<>();
 
         if ( tabComplete.getCursor().startsWith( "/" ) )
@@ -165,7 +180,7 @@ public class UpstreamBridge extends PacketHandler
 
         if ( tabCompleteEvent.isCancelled() )
         {
-            throw CancelSendSignal.INSTANCE;
+            return;
         }
 
         List<String> results = tabCompleteEvent.getSuggestions();
@@ -190,25 +205,30 @@ public class UpstreamBridge extends PacketHandler
 
                 con.unsafe().sendPacket( new TabCompleteResponse( tabComplete.getTransactionId(), new Suggestions( range, brigadier ) ) );
             }
-            throw CancelSendSignal.INSTANCE;
+            return;
         }
+        // results empty -> not handled by bungee, let it through
+        handleGeneralNoEntity( packet );
     }
 
     @Override
-    public void handle(ClientSettings settings) throws Exception
+    public void handleClientSettings(PacketWrapper<ClientSettings> packet) throws Exception
     {
-        con.setSettings( settings );
+        con.setSettings( packet.packet );
 
         SettingsChangedEvent settingsEvent = new SettingsChangedEvent( con );
         bungee.getPluginManager().callEvent( settingsEvent );
+
+        handleGeneralNoEntity( packet );
     }
 
     @Override
-    public void handle(PluginMessage pluginMessage) throws Exception
+    public void handlePluginMessage(PacketWrapper<PluginMessage> packet) throws Exception
     {
+        final PluginMessage pluginMessage = packet.packet;
         if ( pluginMessage.getTag().equals( "BungeeCord" ) )
         {
-            throw CancelSendSignal.INSTANCE;
+            return;
         }
 
         if ( BungeeCord.getInstance().config.isForgeSupport() )
@@ -216,7 +236,7 @@ public class UpstreamBridge extends PacketHandler
             // Hack around Forge race conditions
             if ( pluginMessage.getTag().equals( "FML" ) && pluginMessage.getStream().readUnsignedByte() == 1 )
             {
-                throw CancelSendSignal.INSTANCE;
+                return;
             }
 
             // We handle forge handshake messages if forge support is enabled.
@@ -224,21 +244,21 @@ public class UpstreamBridge extends PacketHandler
             {
                 // Let our forge client handler deal with this packet.
                 con.getForgeClientHandler().handle( pluginMessage );
-                throw CancelSendSignal.INSTANCE;
+                return;
             }
 
             if ( con.getServer() != null && !con.getServer().isForgeServer() && pluginMessage.getData().length > Short.MAX_VALUE )
             {
                 // Drop the packet if the server is not a Forge server and the message was > 32kiB (as suggested by @jk-5)
                 // Do this AFTER the mod list, so we get that even if the intial server isn't modded.
-                throw CancelSendSignal.INSTANCE;
+                return;
             }
         }
 
         PluginMessageEvent event = new PluginMessageEvent( con, con.getServer(), pluginMessage.getTag(), pluginMessage.getData().clone() );
         if ( bungee.getPluginManager().callEvent( event ).isCancelled() )
         {
-            throw CancelSendSignal.INSTANCE;
+            return;
         }
 
         // TODO: Unregister as well?
@@ -246,6 +266,8 @@ public class UpstreamBridge extends PacketHandler
         {
             con.getPendingConnection().getRelayMessages().add( pluginMessage );
         }
+
+        handleGeneralNoEntity( packet );
     }
 
     @Override
